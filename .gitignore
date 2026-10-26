@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+# Private source documents and local exports
+references/
+*.zip
+*.dump
+*.backup
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+.envrc
+credentials*
+secrets*
+.supabase/
+supabase/.temp/
