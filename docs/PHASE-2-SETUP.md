@@ -53,3 +53,9 @@ Letakkan file logo yang dikirim pemilik sebagai `src/assets/enzy-snack-logo.png`
 - Test browser 360px, Pages Functions runtime, backup/restore Supabase. Kode yang diuji lokal bukan pengganti verifikasi ini.
 
 Setelah pairing live lulus UAT, lanjutkan master data Phase 3. Pairing aktif tidak berarti finance/inventory/konsinyasi sudah bisa dipakai.
+
+## Diagnosis halaman aktivasi
+
+Pesan startup kini memuat kode yang aman dibagikan: SETUP-01 pengaturan VITE belum terbaca pada build/environment yang digunakan; SETUP-02 client config invalid; SETUP-03 anonymous provider nonaktif di proyek yang dihubungi; SETUP-04 CAPTCHA; SETUP-05 rate limit; SETUP-06 koneksi/provider tidak terjangkau; SETUP-07 kunci publik/sesi tidak diterima; SETUP-08 belum terklasifikasi; SETUP-09 storage browser tidak tersedia. Ini petunjuk diagnosis, bukan bukti root cause untuk semua kasus.
+
+Tombol Coba koneksi lagi mengulangi penyiapan sesi tanpa menghapus identitas yang tersimpan. Jangan menghapus data situs/merotasi key/menjalankan ulang SQL hanya berdasarkan pesan generik. Jika build tidak membaca VITE, cocokkan Production vs Preview serta commit deployment terlebih dahulu. Jangan mengirim nilai secret saat meminta bantuan. Untuk memuat patch, gunakan banner Perbarui aplikasi setelah deployment sukses; jangan reset storage perangkat yang sudah dipasangkan.

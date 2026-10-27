@@ -15,3 +15,7 @@ Tidak ada migration/bootstrap/seed produksi, data bisnis asli, paid API, atau de
 Logo asli tidak ditemukan sebagai file di workspace/ZIP. Warna dan wordmark sementara telah disesuaikan; slot asset `src/assets/enzy-snack-logo.png` (jpg/jpeg/webp juga didukung) siap. Tidak ada image generatif yang diklaim sebagai logo user.
 
 Petunjuk aktivasi: PHASE-2-SETUP.md. Keberhasilan tes lokal tidak berarti bisnis siap operasional; master data, ledger stok/finance dan kunjungan masih fase lanjut.
+
+## Perbaikan diagnosis startup
+
+60/60 tes dalam 6 file lulus; build TypeScript/Vite lulus. Lima tes tambahan membuktikan klasifikasi kegagalan konfigurasi/Auth, redaksi pesan provider, retry setelah kegagalan dan import fail-closed saat konfigurasi client invalid. UI menampilkan kode SETUP-01..09 tanpa nilai key/token/error body. Polling tidak berjalan sebelum identitas sesi tersedia, agar pesan startup tidak tertimpa. Retry tidak menghapus storage atau mempromosikan perangkat. Penyebab konfigurasi live user belum terverifikasi; screenshot menunjukkan belum ada identitas HP, bukan bukti tunggal variabel salah.

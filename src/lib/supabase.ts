@@ -1,12 +1,19 @@
 import {createClient} from '@supabase/supabase-js';
-const url=import.meta.env.VITE_SUPABASE_URL;
-const key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-export const supabase=url&&key?createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
+import {SessionSetupError} from './session-errors';
+const url=import.meta.env.VITE_SUPABASE_URL?.trim();
+const key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
+let configurationError:SessionSetupError|null=null;
+function configuredClient(){
+ if(!url||!key){configurationError=new SessionSetupError('CONFIG_MISSING');return null}
+ try{return createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})}
+ catch{configurationError=new SessionSetupError('CONFIG_INVALID');return null}
+}
+export const supabase=configuredClient();
 let initialization:Promise<string>|null=null;
 export function initializeSession():Promise<string>{
  if(initialization)return initialization;
  initialization=(async()=>{
-  if(!supabase)throw new Error('Konfigurasi belum tersedia.');
+  if(!supabase)throw configurationError??new SessionSetupError('CONFIG_MISSING');
   const {data,error}=await supabase.auth.getSession();if(error)throw error;
   if(data.session)return data.session.user.id;
   const result=await supabase.auth.signInAnonymously();if(result.error)throw result.error;
