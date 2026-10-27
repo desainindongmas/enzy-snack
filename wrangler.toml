@@ -1,0 +1,4 @@
+# Static Cloudflare Pages only; no Workers, bindings or secrets.
+name = "enzy-snack"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-27"

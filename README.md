@@ -37,3 +37,7 @@ Dokumen yang sebelumnya kurang sekarang lengkap, diaudit dan disimpan lokal tanp
 ## Git dan data privat
 
 Branch pengembangan: `development`. Repo hanya berisi source, tes fixture sintetis, draft SQL dan dokumentasi teknis. Dokumen bisnis asli (`references/`), `.env`, credential, ekspor database, arsip, dependensi dan build tidak dilacak. `.env.example` hanya memiliki nama variabel publik dengan nilai kosong.
+
+## Cloudflare Pages
+
+Konfigurasi static Pages tersedia di `wrangler.toml`, Node 22 di `.node-version`, dan header hosting di `public/_headers`. Hubungkan repo ke akun Cloudflare dengan branch `development`, build `npm run build`, output `dist`. Langkah lengkap dan batas preview: [Cloudflare Pages](docs/CLOUDFLARE-PAGES.md). Konfigurasi siap tidak berarti situs sudah deployed.
