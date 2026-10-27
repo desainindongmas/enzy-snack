@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:functions": "WRANGLER_SEND_METRICS=false WRANGLER_LOG_PATH=work/wrangler-build.log wrangler pages functions build functions --outdir work/pages-functions"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",
@@ -29,6 +30,7 @@
     "typescript": "~5.7.2",
     "vite": "^6.1.0",
     "vite-plugin-pwa": "^0.21.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "wrangler": "^4.153.0"
   }
 }

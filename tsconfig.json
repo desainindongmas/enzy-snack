@@ -13,7 +13,8 @@
     "skipLibCheck": true,
     "noEmit": true,
     "types": [
-      "vite/client"
+      "vite/client",
+      "vite-plugin-pwa/client"
     ],
     "baseUrl": ".",
     "paths": {
@@ -24,6 +25,8 @@
   },
   "include": [
     "src",
-    "vite.config.ts"
+    "vite.config.ts",
+    "server",
+    "functions"
   ]
 }

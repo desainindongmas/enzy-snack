@@ -5,7 +5,7 @@ Baca `README.md`, `docs/CONFLICT-REPORT.md`, `docs/MIGRATION-PLAN.md` dan `docs/
 ## Scope
 - Mobile-first PWA Bahasa Indonesia untuk owner, produksi, dan petugas lapangan; satu Supabase PostgreSQL bersama.
 - Tanpa layar login harian; gunakan anonymous Supabase Auth + persetujuan/pairing perangkat. Jangan membuat public owner-claim atau melewatkan autentikasi.
-- Fase sekarang: audit + scaffold dasar UI Fase 0–1. Tidak deploy tanpa instruksi user, tidak sambungkan data bisnis nyata, tidak jalankan SQL draft ke produksi.
+- Fase sekarang: Phase 2 — akses perangkat/pairing dan identitas visual, sesuai instruksi terbaru user. Tidak deploy tanpa instruksi user, tidak sambungkan data bisnis nyata, tidak jalankan SQL draft ke produksi.
 
 ## Data & engine
 - Harga beli supplier per pembelian/lot; biaya kemasan & repacking belum diketahui; jangan mengarang HPP final.

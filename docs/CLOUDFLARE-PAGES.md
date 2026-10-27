@@ -1,3 +1,5 @@
+> **Phase 2:** panduan ini mencatat setup frontend awal. Backend kini menggunakan Pages Functions `/api/*`; ikuti [PHASE-2-SETUP.md](PHASE-2-SETUP.md) untuk migration, secrets, dan bootstrap. Frontend tampil bukan bukti pairing sudah aktif.
+
 # Cloudflare Pages — scaffold Phase 0–1
 
 Konfigurasi frontend statis siap di branch `development`. Ini belum bukti proyek Cloudflare sudah dibuat atau deployed. Akun Cloudflare belum terhubung ke sesi pengembangan.

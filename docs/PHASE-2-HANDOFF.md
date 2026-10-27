@@ -1,18 +1,19 @@
-# Handoff Phase 2 dan checklist
+# Phase 2 — implementasi dan batas verifikasi
 
-- [x] Sumber starter pack lengkap dan diaudit; konflik profiles/device dan gaps SQL dicatat di CONFLICT-REPORT dan MIGRATION-PLAN.
-- [ ] Inventaris schema/ACL/policies/fungsi proyek Supabase nyata; jika legacy ada, buat transition migration terpisah. Migration fresh sengaja menolak schema Enzy existing.
-- [ ] Sediakan proyek Supabase TEST, aktifkan anonymous Auth dan abuse protection; jangan memakai data asli.
-- [ ] Review dan terapkan migration secara manual di test; uji anon, authenticated anonymous, active role, revoked dan pemalsuan UUID.
-- [ ] Tambahkan endpoint status-perangkat yang memvalidasi JWT server-side dan hanya mengembalikan perangkat sendiri. Tidak mempercayai role/localStorage; status fresh dan cache bisnis dibersihkan saat revoke.
-- [ ] Issuance: JWT valid, owner active, nama/role tervalidasi, token minimal 128-bit dari CSPRNG, hash saja disimpan, TTL singkat terkonfigurasi, jangan log token.
-- [ ] Redemption: rate limit persisten/atomik per IP terpercaya + auth UID, batas global, hash compare, validasi TTL dan unused, SELECT FOR UPDATE; bind UID dari JWT terverifikasi, bukan body.
-- [ ] Konsumsi invite + aktivasi device + audit dalam satu transaksi. Race menghasilkan tepat satu sukses; retry tidak mengaktifkan perangkat berbeda.
-- [ ] CORS allowlist frontend, body size limit, error generik, no-store, pembatasan fungsi privileged dan audit tanpa rahasia.
-- [ ] Shell role hanya sesudah server menyatakan active. Tidak ada role switch. UI bisnis menunggu Phase 3+.
-- [ ] Jalankan integration/adversarial tests, expiry/reuse/bruteforce/revoke, backup restore. Baru ganti stub; jangan membuka tabel invite ke client.
+Source pairing kini diimplementasikan melalui Cloudflare Pages Functions dan RPC service-only, bukan Supabase Edge Function stub lama. Endpoint Edge stub lama tetap menolak dan tidak digunakan/dideploy. Setup yang berlaku: [PHASE-2-SETUP](PHASE-2-SETUP.md).
 
-## Risiko tersisa
-Migration baru diuji di PostgreSQL WASM lokal dengan fixture Auth; belum diuji di Supabase nyata. SQL referensi asli tidak dijalankan. Tidak ada data bisnis cloud atau sinkronisasi operasional yang diaktifkan. Frontend tanpa konfigurasi menampilkan status belum tersedia. Sesi hilang perlu pairing ulang. Cache service worker hanya app shell; jangan cache API/auth/data bisnis. PWA memerlukan HTTPS atau localhost dan pemeriksaan perangkat nyata. Kuota free tier bisa berubah; tanpa scheduler keep-alive. Kode bootstrap memerlukan review admin. CSP/header hosting dan observabilitas diatur sebelum deploy berizin.
+## Sudah diimplementasikan dan diuji lokal
+- JWT server verification boundary, exact origin, trusted Cloudflare ingress, body limit/no-store.
+- Status perangkat sendiri, owner issue/list/revoke; pending/revoked default-deny.
+- CSPRNG 256-bit code, SHA-256 hash-only storage, TTL 10 menit, bind verified auth UID.
+- Persisted UID/IP/global throttling, single-use row lock + actor advisory lock, active owner authorization dan atomic audit.
+- UI anonymous/pairing, owner management, production/field activation shell, online/status refresh. Tidak ada role switch atau public claim owner.
+- Logo asset slot dan branding sesuai palet referensi. File asli belum tersedia; tidak diganti artwork generatif.
 
-Phase 3–7: master data dan snapshot harga; posting stok/finance atomik server dengan lock dan idempotency payload hash; kunjungan/retur; komisi dan setoran tanpa double count; COST_INCOMPLETE jika biaya belum diketahui; recovery/UAT/deploy hanya setelah acceptance lulus dan izin tersedia.
+## Belum dapat dikerjakan tanpa konfigurasi eksternal
+- Inventaris dan penerapan migration ke proyek Supabase TEST, bootstrap owner manual.
+- Secret runtime Cloudflare dan anonymous Auth settings. Tidak ada secret/kredensial diberikan dalam sesi.
+- E2E/JWT/REST/Pages live, true multi-connection concurrency/revoke race, browser 360px/install PWA dan backup restore.
+- Pemasangan file logo asli setelah dilampirkan ulang.
+
+SQL referensi asli dan SQL produksi tidak dijalankan. Business tables/posting masih fase lanjut. Jangan menyatakan operasional bisnis siap hanya karena halaman tampil atau perangkat berhasil pairing.

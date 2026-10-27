@@ -1,4 +1,5 @@
-# Static Cloudflare Pages only; no Workers, bindings or secrets.
+# Cloudflare Pages: static frontend + /api/* Pages Functions.
+# Secrets are configured only in the Cloudflare dashboard, never here.
 name = "enzy-snack"
 pages_build_output_dir = "./dist"
 compatibility_date = "2026-10-27"

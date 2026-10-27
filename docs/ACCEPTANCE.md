@@ -1,3 +1,5 @@
+> **Pembaruan Phase 2:** matriks di bawah merekam baseline Phase 0–1. Pairing sekarang diimplementasikan dan diuji lokal (expiry/reuse/throttle/revoke/atomic rollback) melalui Pages Functions dan RPC. Hasil terbaru di [VERIFICATION](VERIFICATION.md); setup dan batas UAT live di [PHASE-2-SETUP](PHASE-2-SETUP.md). Baseline tidak menjadi klaim status terkini endpoint baru.
+
 # Acceptance dan batas verifikasi
 
 | Persyaratan | Verifikasi Phase 0–1 | Status yang tetap menunggu |

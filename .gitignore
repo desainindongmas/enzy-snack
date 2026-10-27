@@ -19,3 +19,8 @@ credentials*
 secrets*
 .supabase/
 supabase/.temp/
+
+.wrangler/
+.dev.vars
+.dev.vars.*
+work/

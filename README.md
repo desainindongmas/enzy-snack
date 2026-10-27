@@ -1,4 +1,4 @@
-# Enzy Snack — Phase 0 + 1
+# Enzy Snack — Phase 2: akses perangkat
 
 Scaffold lokal React + TypeScript + Vite + Tailwind 4, komponen Button pola shadcn/ui (Radix/CVA), Supabase anonymous Auth dan PWA. Bahasa Indonesia, layout mobile dengan breakpoint 760px dan target 360px. Palet mengacu logo lampiran; gambar logo asli tidak tersedia sebagai file lokal sehingga ikon sementara dan ilustrasi kemasan CSS digunakan, bukan pengganti aset final.
 
@@ -15,7 +15,7 @@ npm run build
 
 Anonymous sign-in harus diaktifkan pada proyek Supabase. Tidak perlu email/password. Jika env kosong, aplikasi menolak aktivasi dan menampilkan pesan penyiapan; tidak memakai backend/data contoh. Jangan pernah mengisi service-role/secret key ke variabel VITE_. Jangan menerapkan pada database existing sebelum audit RLS lengkap.
 
-Phase 1 hanya layar perangkat belum terhubung, sesi anonim persisten dan kode pairing. Tidak ada query data bisnis, role switch, demo keuangan, claim-owner atau fallback akses. Redeem lokal dan kedua Edge Function stub menolak semua permintaan; aktivasi belum berfungsi sampai Phase 2. Perangkat active pun belum mendapat shell operasional pada fase ini. Tidak ada deploy atau migration otomatis. Push source hanya mengikuti instruksi eksplisit user.
+Phase 2 menambahkan API Cloudflare Pages Functions dan pairing RPC atomik, status perangkat serta owner issue/list/revoke. Seluruh API fail-closed sampai backend dikonfigurasi. Tidak ada public claim-owner, data bisnis contoh, atau finance/inventory posting. Bootstrap owner dan migration tetap manual, bukan bagian build/deploy. Lihat [Setup Phase 2](docs/PHASE-2-SETUP.md).
 
 ## Dokumen
 
@@ -41,3 +41,13 @@ Branch pengembangan: `development`. Repo hanya berisi source, tes fixture sintet
 ## Cloudflare Pages
 
 Konfigurasi static Pages tersedia di `wrangler.toml`, Node 22 di `.node-version`, dan header hosting di `public/_headers`. Hubungkan repo ke akun Cloudflare dengan branch `development`, build `npm run build`, output `dist`. Langkah lengkap dan batas preview: [Cloudflare Pages](docs/CLOUDFLARE-PAGES.md). Konfigurasi siap tidak berarti situs sudah deployed.
+
+## Logo dan deployment Phase 2
+
+Artwork asli belum tersedia sebagai file lokal. Letakkan logo asli sebagai `src/assets/enzy-snack-logo.png` (jpg/jpeg/webp juga didukung), lalu build/push; komponen Brand akan memakainya di header dan panel. Sementara itu palet dan wordmark teks dipakai tanpa mengklaim sebagai logo asli.
+
+Hosting kini memakai Pages Functions `/api/*` selain frontend statis. `SUPABASE_SERVICE_ROLE_KEY` dan `PAIRING_IP_HASH_SECRET` hanya secret runtime Cloudflare, tidak ada di VITE_* atau repo. Panduan Phase 2 menggantikan keterangan Phase 1 tentang stub lokal. Env kosong tetap menolak aktivasi.
+
+## Verifikasi dan pengembangan backend
+
+`npm test` menjalankan SQL disposable + tes API/Auth lokal. `npm run check:functions` memverifikasi bundling Pages Functions tanpa deploy atau login akun. `npm run build` membangun frontend serta memeriksa TypeScript backend. `npm run dev` (Vite) hanya melayani frontend; API membutuhkan runtime Cloudflare Pages. Untuk pengujian full-stack lokal admin dapat memakai Wrangler Pages dev setelah build dengan environment lokal yang diabaikan Git (`.dev.vars`), namun pemeriksaan trusted ingress harus tetap dipertahankan dan UAT live TEST tetap wajib. Jangan memasukkan secret ke konfigurasi Vite untuk membuat API lokal seolah aktif.
