@@ -35,6 +35,10 @@ const messages:Record<string,string>={
  RATE_LIMITED:'Terlalu banyak percobaan. Tunggu satu menit sebelum mencoba kembali.',
  ALREADY_ACTIVE:'Perangkat sudah terhubung. Perbarui status perangkat.',
  INVALID_REQUEST:'Periksa kembali isian sebelum melanjutkan.',
+ MIGRATION_REQUIRED:'Data usaha belum siap. Jalankan SQL Phase 3 melalui admin Supabase terlebih dahulu.',
+ CONFLICT:'Data sudah berubah, kode produk sudah dipakai, atau periode harga bertabrakan. Muat ulang dan periksa isian.',
+ INVALID_REFERENCE:'Produk, warung, atau agen tidak ditemukan atau sudah diarsipkan.',
+ NOT_FOUND:'Data tidak ditemukan. Muat ulang daftar.',
 };
 export async function api<T>(path:string,body?:unknown):Promise<T>{
  if(!supabase)throw new Error(messages.SETUP_REQUIRED);

@@ -1,4 +1,4 @@
-# Enzy Snack — Phase 2: akses perangkat
+# Enzy Snack — Phase 3: data usaha dan histori harga
 
 Scaffold lokal React + TypeScript + Vite + Tailwind 4, komponen Button pola shadcn/ui (Radix/CVA), Supabase anonymous Auth dan PWA. Bahasa Indonesia, layout mobile dengan breakpoint 760px dan target 360px. Palet mengacu logo lampiran; gambar logo asli tidak tersedia sebagai file lokal sehingga ikon sementara dan ilustrasi kemasan CSS digunakan, bukan pengganti aset final.
 
@@ -51,3 +51,11 @@ Hosting kini memakai Pages Functions `/api/*` selain frontend statis. `SUPABASE_
 ## Verifikasi dan pengembangan backend
 
 `npm test` menjalankan SQL disposable + tes API/Auth lokal. `npm run check:functions` memverifikasi bundling Pages Functions tanpa deploy atau login akun. `npm run build` membangun frontend serta memeriksa TypeScript backend. `npm run dev` (Vite) hanya melayani frontend; API membutuhkan runtime Cloudflare Pages. Untuk pengujian full-stack lokal admin dapat memakai Wrangler Pages dev setelah build dengan environment lokal yang diabaikan Git (`.dev.vars`), namun pemeriksaan trusted ingress harus tetap dipertahankan dan UAT live TEST tetap wajib. Jangan memasukkan secret ke konfigurasi Vite untuk membuat API lokal seolah aktif.
+
+## Phase 3 — data usaha
+
+Menu pemilik sekarang memisahkan Data usaha dan Perangkat tim. Supplier, SKU, warung, agen, dan harga per periode dikelola melalui backend owner-only dengan histori/audit, versi optimistic dan idempotency. Perangkat produksi/lapangan tetap dibatasi. Tidak membuat data bisnis contoh atau posting stok/uang.
+
+Ikuti [panduan Phase 3](docs/PHASE-3-SETUP.md) untuk menjalankan **satu migration baru** secara manual di TEST. Jangan mengulang migration 001/002 atau bootstrap owner. Jika migration belum ada, menu Data usaha fail-closed dengan pesan yang jelas; menu pairing tetap tersedia.
+
+`npm run test:browser` menjalankan Chromium dengan endpoint fixture, bukan Supabase live. Gunakan browser Playwright yang terpasang, `/usr/bin/chromium` pada managed Linux, atau `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` untuk memilih binary lokal. Screenshot/report lokal tidak dilacak Git.

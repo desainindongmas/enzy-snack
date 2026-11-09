@@ -25,3 +25,14 @@ Petunjuk aktivasi: PHASE-2-SETUP.md. Keberhasilan tes lokal tidak berarti bisnis
 76/76 tes lokal dalam 7 file lulus; TypeScript/Vite build dan Wrangler Pages Functions compile lulus. Tes SDK sebenarnya dengan transport HTTP fixture membuktikan signup menuju `/auth/v1/signup` dan RPC menuju satu `/rest/v1/rpc/enzy_pairing_action`, tanpa suffix ganda. Tes config frontend dan boundary backend mencakup URL Data API; path/credentials/query/fragment yang tidak diharapkan ditolak. Tidak menggunakan jaringan Supabase atau membuat akun anonymous baru dalam tes tersebut.
 
 Dokumentasi inisialisasi Supabase diperiksa; changelog Markdown tidak dapat dibaca oleh alat web (content-type), sehingga indeks HTML changelog diperiksa. Tidak ada perubahan SDK/CLI/schema pada perbaikan ini. Akses connector ke proyek Supabase user ditolak oleh kontrol akses; konfigurasi Auth, log live dan keberhasilan signup nyata belum dapat diperiksa. Tidak ada perubahan SQL atau kunci. Validasi live memerlukan deployment Cloudflare baru dan percobaan dari HP user.
+
+## Phase 3 — data dasar dan harga
+
+- `npm test`: 101/101 tes dalam 8 file lulus. Tambahan Phase 3: 21 tes SQL master/pricing dan 4 tes boundary HTTP di atas baseline 76.
+- `npm run test:browser`: 4/4 tes Chromium lulus pada viewport 360×800 dengan Auth/API fixture. Mencakup tambah/ubah/arsip produk tanpa overflow horizontal, harga agen khusus warung dengan selector pencarian, pembatasan menu produksi/offline, serta akses menu perangkat saat migration master belum ada.
+- TypeScript/Vite/PWA build lulus dan Wrangler Pages Functions compile lulus.
+- Migration hasil CLI baru diuji di PostgreSQL WASM disposable, bukan database live. Mencakup RLS/grants, owner vs pending/production/field/revoked, optimistic version, retry hash, pagination, exact-scope overlap, perubahan harga atomik, histori immutable, invalid references/amounts/dates.
+- Tidak ada contoh bisnis disisipkan oleh migration. Hanya konfigurasi singleton bisnis Enzy Snack dibuat; semua fixture `TEST` berada di pengujian.
+- Percobaan browser awal sandbox gagal bind/connect localhost (EPERM). Pengujian kemudian berhasil pada executor dengan izin proses yang sesuai, tanpa mengubah pembatasan origin/Auth/data aplikasi.
+
+Belum: pemeriksaan schema/grants/advisors proyek Supabase sebenarnya (connector menolak akses), penerapan SQL manual TEST oleh user, JWT/Pages/PostgREST end-to-end live, true multi-connection concurrency PostgreSQL, backup/restore dan stock/finance engine. Tidak menjalankan migration remote atau membuat admin kedua. Panduan aktivasi: PHASE-3-SETUP.md.

@@ -24,3 +24,6 @@ supabase/.temp/
 .dev.vars
 .dev.vars.*
 work/
+
+playwright-report/
+test-results/

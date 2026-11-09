@@ -20,12 +20,16 @@ const routes:Record<string,{method:string;action:string}>={
  '/api/device':{method:'GET',action:'status'},'/api/devices':{method:'GET',action:'list'},
  '/api/pairing/issue':{method:'POST',action:'issue'},'/api/pairing/redeem':{method:'POST',action:'redeem'},
  '/api/devices/revoke':{method:'POST',action:'revoke'},
+ '/api/master':{method:'GET',action:'master_list'},
+ '/api/master/save':{method:'POST',action:'master_save'},
+ '/api/master/archive':{method:'POST',action:'master_archive'},
+ '/api/master/price':{method:'POST',action:'master_price'},
 };
-async function boundedJson(request:Request):Promise<Record<string,unknown>>{
+async function boundedJson(request:Request,maxBytes=2048):Promise<Record<string,unknown>>{
  if(!request.headers.get('content-type')?.startsWith('application/json'))throw new Error('body');
  const reader=request.body?.getReader();if(!reader)throw new Error('body');
  let size=0;const chunks:Uint8Array[]=[];
- while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>2048){await reader.cancel();throw new Error('body')}chunks.push(value)}
+ while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>maxBytes){await reader.cancel();throw new Error('body')}chunks.push(value)}
  const bytes=new Uint8Array(size);let offset=0;for(const c of chunks){bytes.set(c,offset);offset+=c.length}
  const body:unknown=JSON.parse(new TextDecoder().decode(bytes));
  if(!body||typeof body!=='object'||Array.isArray(body))throw new Error('body');return body as Record<string,unknown>;
@@ -46,16 +50,31 @@ export async function handlePairing(request:Request,env:PairingEnv,backend?:Back
   if(!/^Bearer [A-Za-z0-9._-]{16,4096}$/.test(auth))return json({error:'UNAUTHORIZED'},401);
   let payload:Record<string,unknown>={};
   if(request.method==='POST'){
-   try{payload=await boundedJson(request)}catch{return json({error:'INVALID_REQUEST'},400)}
+   try{payload=await boundedJson(request,route.action.startsWith('master_')?8192:2048)}catch{return json({error:'INVALID_REQUEST'},400)}
   }
   const client=backend?null:createClient(projectUrl,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   const service:Backend=backend??{
    async verify(token){const {data,error}=await client!.auth.getUser(token);return !error&&data.user?data.user.id:null},
-   async action(actor,action,ipHash,body){const {data,error}=await client!.rpc('enzy_pairing_action',{p_actor:actor,p_action:action,p_ip_hash:ipHash,p_payload:body});return error?null:data},
+   async action(actor,action,ipHash,body){
+    const master=action.startsWith('master_');
+    const {data,error}=await client!.rpc(master?'enzy_master_action':'enzy_pairing_action',master?
+     {p_actor:actor,p_action:action.slice(7),p_kind:body.kind,p_ip_hash:ipHash,p_payload:body}:
+     {p_actor:actor,p_action:action,p_ip_hash:ipHash,p_payload:body});
+    if(master&&error&&['42883','42P01','PGRST202'].includes(error.code))return {error:'MIGRATION_REQUIRED'};
+    return error?null:data;
+   },
   };
   const actor=await service.verify(auth.slice(7));if(!actor)return json({error:'UNAUTHORIZED'},401);
   let code:string|undefined;
-  if(route.action==='issue'){
+  if(route.action.startsWith('master_')){
+   if(route.action==='master_list'){
+    if(Array.from(url.searchParams.keys()).some(k=>!['kind','search','page','include_archived'].includes(k)))return json({error:'INVALID_REQUEST'},400);
+    payload=Object.fromEntries(url.searchParams);
+   }
+   if(!['suppliers','products','stores','agents','prices'].includes(String(payload.kind))||
+    Object.keys(payload).some(k=>!(route.action==='master_list'?['kind','search','page','include_archived']:['kind','record','request_id']).includes(k)))return json({error:'INVALID_REQUEST'},400);
+   if(route.action!=='master_list'&&(!payload.record||typeof payload.record!=='object'||Array.isArray(payload.record)||typeof payload.request_id!=='string'))return json({error:'INVALID_REQUEST'},400);
+  }else if(route.action==='issue'){
    if(Object.keys(payload).some(k=>!['role','device_label'].includes(k))||!['production','field'].includes(String(payload.role))||typeof payload.device_label!=='string'||!payload.device_label.trim()||payload.device_label.trim().length>100)return json({error:'INVALID_REQUEST'},400);
    code=newPairingCode();payload={role:payload.role,device_label:payload.device_label.trim(),code_hash:await digest(code)};
   }else if(route.action==='redeem'){
@@ -68,7 +87,7 @@ export async function handlePairing(request:Request,env:PairingEnv,backend?:Back
   }
   const result=await service.action(actor,route.action,await hashIp(ip,env.PAIRING_IP_HASH_SECRET),payload);
   if(!result)return json({error:'BACKEND_UNAVAILABLE'},503);
-  if(result.error){const status=result.error==='RATE_LIMITED'?429:['FORBIDDEN','DEVICE_REVOKED'].includes(String(result.error))?403:result.error==='UNAUTHORIZED'?401:400;return json({error:result.error},status)}
+  if(result.error){const status=result.error==='MIGRATION_REQUIRED'?503:result.error==='CONFLICT'?409:result.error==='RATE_LIMITED'?429:['FORBIDDEN','DEVICE_REVOKED'].includes(String(result.error))?403:result.error==='UNAUTHORIZED'?401:400;return json({error:result.error},status)}
   return json(code?{...result,code}:result);
  }catch{return json({error:'BACKEND_UNAVAILABLE'},503)}
 }

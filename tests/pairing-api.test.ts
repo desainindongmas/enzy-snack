@@ -58,3 +58,21 @@ it('backend accepts copied Data API base URL but rejects arbitrary paths',async(
  expect((await handlePairing(request('/api/device'),{...env,SUPABASE_URL:'https://fixture.supabase.co/rest/v1/stores'},rejected)).status).toBe(503);
  expect(rejected.verify).not.toHaveBeenCalled();
 });
+it('master endpoints use verified actor and bounded list query',async()=>{
+ const b=backend({records:[],count:0,page:2});
+ expect((await handlePairing(request('/api/master?kind=products&page=2&search=TEST'),env,b)).status).toBe(200);
+ expect(b.action).toHaveBeenCalledWith('verified-user','master_list',expect.any(String),{kind:'products',page:'2',search:'TEST'});
+});
+it('master write cannot inject actor or business through envelope',async()=>{
+ const b=backend();
+ expect((await handlePairing(request('/api/master/save',{kind:'products',record:{name:'TEST'},request_id:'fixture',actor:'forged'}),env,b)).status).toBe(400);
+ expect(b.action).not.toHaveBeenCalled();
+});
+it('master migration missing is reported without leaking database error',async()=>{
+ const r=await handlePairing(request('/api/master?kind=products'),env,backend({error:'MIGRATION_REQUIRED'}));
+ expect(r.status).toBe(503);expect(await r.json()).toEqual({error:'MIGRATION_REQUIRED'});
+});
+it('master stale version returns 409 and requests cannot pick arbitrary kind',async()=>{
+ expect((await handlePairing(request('/api/master/save',{kind:'products',record:{id:'fixture'},request_id:'fixture'}),env,backend({error:'CONFLICT'}))).status).toBe(409);
+ const b=backend();expect((await handlePairing(request('/api/master?kind=auth.users'),env,b)).status).toBe(400);expect(b.action).not.toHaveBeenCalled();
+});

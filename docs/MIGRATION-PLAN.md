@@ -21,3 +21,7 @@ Jangan menjalankan kedua SQL referensi secara berurutan atau memaksa migration f
 
 ## Perbedaan sengaja dari SQL referensi device
 Role NULL dibolehkan untuk pending; active tidak boleh NULL. FK auth tidak cascade agar audit/histori tidak hilang saat user dihapus. Owner invite belum dibuka; bootstrap/recovery admin. UUID untuk audit konsisten dengan scaffold; tidak ada data legacy yang diubah dari bigint. Hash code saja tidak membuktikan entropy/hash aman: issuance/redeem masih nonaktif.
+
+## Implementasi Phase 3
+
+Migration `20261109130426_master_data_pricing.sql` menambahkan konfigurasi satu bisnis, empat tabel master, price agreements periodik, audit dan request idempotency, serta RPC owner-only. Tidak mengubah devices/invites/owner yang sudah ada. Penugasan lapangan historis dan snapshot transaksi belum diimplementasikan karena memerlukan engine kunjungan/stock pada fase lanjut. Lihat PHASE-3-SETUP untuk langkah manual TEST dan batas UAT.

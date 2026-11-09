@@ -17,3 +17,12 @@ TODO: review migration di Supabase test; implementasi secure pairing dan status 
 - Branding: palette/reference typography, original asset slot, PWA update prompt. Logo asli menunggu lampiran file.
 - Tests: 29 tes tambahan di atas baseline 26; PostgreSQL WASM dan mocked API boundary. Wrangler compile lokal ditambahkan.
 - Dokumen setup Phase 2 menjelaskan konfigurasi TEST, admin bootstrap, runtime secret, UAT live, retention dan recovery. SQL asli maupun SQL produksi tidak dijalankan.
+
+## Phase 3
+
+- Data usaha owner-only: supplier, produk, warung, agen; tambah/ubah/arsip, server search/pagination dan optimistic version.
+- Perjanjian harga exact scope direct/agent dan agent+store override; range tidak overlap, immutable amounts, closing+replacement atomic, audit dan idempotent requests.
+- New service-only RPC di migration 20261109130426_master_data_pricing.sql. Existing owner/device/invite tidak disentuh; tidak ada seed bisnis atau public grants.
+- Cloudflare boundary master API mewarisi verifikasi JWT, origin dan ingress; body cap 8 KB dan persisted throttle. Pesan khusus jika SQL belum dipasang.
+- Menu Data usaha terpisah dari Perangkat tim; employee tetap tidak mendapat akses data master. Layout owner penuh dan mobile 360px diuji.
+- 101 tes unit/integrasi lokal, 4 browser fixture tests, build dan Functions compile lulus. Source siap untuk review/manual migration TEST; bukan klaim engine bisnis lengkap atau live database telah diubah.
