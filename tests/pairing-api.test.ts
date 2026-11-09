@@ -76,3 +76,14 @@ it('master stale version returns 409 and requests cannot pick arbitrary kind',as
  expect((await handlePairing(request('/api/master/save',{kind:'products',record:{id:'fixture'},request_id:'fixture'}),env,backend({error:'CONFLICT'}))).status).toBe(409);
  const b=backend();expect((await handlePairing(request('/api/master?kind=auth.users'),env,b)).status).toBe(400);expect(b.action).not.toHaveBeenCalled();
 });
+it('inventory API dispatch binds verified identity and accepts only documented envelope',async()=>{
+ const b=backend({records:[],count:0,page:1});
+ expect((await handlePairing(request('/api/inventory?kind=balances'),env,b)).status).toBe(200);
+ expect(b.action).toHaveBeenCalledWith('verified-user','inventory_list',expect.any(String),{kind:'balances'});
+ const denied=backend();expect((await handlePairing(request('/api/inventory/purchase',{record:{},request_id:'fixture',actor:'forged'}),env,denied)).status).toBe(400);expect(denied.action).not.toHaveBeenCalled();
+});
+it('inventory migration missing has a distinct setup message; stock errors never report success',async()=>{
+ const r=await handlePairing(request('/api/inventory?kind=balances'),env,backend({error:'INVENTORY_REQUIRED'}));expect(r.status).toBe(503);
+ expect(await r.json()).toEqual({error:'INVENTORY_REQUIRED'});
+ const stock=await handlePairing(request('/api/inventory/transfer',{record:{},request_id:'fixture'}),env,backend({error:'INSUFFICIENT_STOCK'}));expect(stock.status).toBe(400);expect(await stock.json()).toEqual({error:'INSUFFICIENT_STOCK'});
+});

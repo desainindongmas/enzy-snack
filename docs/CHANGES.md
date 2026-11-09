@@ -30,3 +30,13 @@ TODO: review migration di Supabase test; implementasi secure pairing dan status 
 ## Perbaikan navigasi Harga & Riwayat
 
 Hasil list kini terikat pada query/tab yang memuatnya sehingga profil dari tab sebelumnya tidak pernah dirender sebagai harga pada frame transisi. Memperbaiki layar putih yang muncul dari tab Produk, Warung atau Agen terisi. Formatter tanggal menjaga data kosong/invalid tetap terlihat sebagai label. Regresi browser mencakup switching berulang dan refresh; tidak perlu migration atau perubahan data pengguna.
+
+## Phase 4
+
+- Pembelian bahan per lot dengan supplier/harga snapshot, gram, expiry opsional dan biaya perolehan nullable.
+- Repacking hingga 20 lot bahan, rekonsiliasi berat terukur, batch produk baik pcs dan biaya belum lengkap tanpa HPP/laba palsu.
+- Gudang/muatan lapangan/penguasaan agen, transfer produk jadi, saldo per lot/lokasi dan ledger immutable. Tidak ada penjualan/kas/komisi akibat transfer.
+- Pembalikan owner-only dengan alasan, opposite ledger legs dan penolakan bila stok dependency tidak cukup; tidak menghapus histori.
+- RPC atomik/idempotent service-only, schema helper privat, status/role check, scope lapangan dan cost redaction, persisted throttle, serialized posting + row locks.
+- Menu produksi/stok mobile, selector pencarian/paginasi, ringkasan sebelum posting, receipt dari server dan query-key isolation. Data usaha/perangkat tetap tersedia bila migration baru belum diterapkan.
+- 125 tes lokal, 11 tes browser dan pengujian concurrency dua koneksi PostgreSQL 17 lulus; build dan Functions compile lulus. Tidak mengubah database live, env/credential atau owner. Panduan manual/UAT TEST ditambahkan; admin kedua tetap ditunda.

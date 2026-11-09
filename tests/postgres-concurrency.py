@@ -1,0 +1,81 @@
+"""Disposable official PostgreSQL 17 Docker test. No host ports, network or credentials.
+Run only against the managed LOCAL daemon. Never accepts a live database URL.
+"""
+import json,os,subprocess,time,uuid
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[1]
+DOCKER=['env','-u','DOCKER_HOST','-u','DOCKER_CONTEXT','-u','DOCKER_TLS','-u','DOCKER_TLS_VERIFY','-u','DOCKER_CERT_PATH','docker','--host=unix:///var/run/docker.sock']
+NAME='enzy-stock-test-'+str(os.getpid())
+IMAGE='postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac'
+PSQL=DOCKER+['exec','-i',NAME,'psql','-X','-q','-t','-A','-U','postgres','-v','ON_ERROR_STOP=1']
+OWNER='11111111-1111-4111-8111-111111111111';OTHER='66666666-6666-4666-8666-666666666666';IP='a'*64
+
+def sql_quote(value):return "'"+str(value).replace("'","''")+"'"
+def q(sql):
+ r=subprocess.run(PSQL,input=sql,text=True,capture_output=True)
+ if r.returncode:raise RuntimeError(r.stderr.strip())
+ return r.stdout.strip()
+def statement(action,record,actor=OWNER,key=None):
+ body=json.dumps({'record':record,'request_id':key or str(uuid.uuid4())})
+ return f"select public.enzy_inventory_action({sql_quote(actor)}::uuid,{sql_quote(action)},{sql_quote(IP)},{sql_quote(body)}::jsonb);"
+def post(action,record,actor=OWNER,key=None):return json.loads(q(statement(action,record,actor,key)))
+def race(first_sql,second_sql):
+ first=subprocess.Popen(PSQL,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+ first.stdin.write("set application_name='enzy_first';begin;"+first_sql+"select pg_sleep(2);commit;\n");first.stdin.close()
+ for _ in range(100):
+  held=q("select exists(select 1 from pg_stat_activity a join pg_locks l on a.pid=l.pid where a.application_name='enzy_first' and l.locktype='advisory' and l.granted);")
+  if held=='t':break
+  time.sleep(.02)
+ else:raise AssertionError('First transaction did not acquire posting lock')
+ second=subprocess.Popen(PSQL,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+ second.stdin.write("set application_name='enzy_second';"+second_sql+'\n');second.stdin.close()
+ blocked=False
+ for _ in range(20):
+  blocked=q("select exists(select 1 from pg_stat_activity where application_name='enzy_second' and wait_event_type='Lock');")=='t'
+  if blocked:break
+  time.sleep(.02)
+ a_text=first.stdout.read();a_err=first.stderr.read();a_status=first.wait()
+ b_text=second.stdout.read();b_err=second.stderr.read();b_status=second.wait()
+ assert a_status==0,a_err;assert b_status==0,b_err;assert blocked,'Second connection did not overlap first transaction'
+ a=[json.loads(x) for x in a_text.splitlines() if x.startswith('{')][0]
+ b=[json.loads(x) for x in b_text.splitlines() if x.startswith('{')][0]
+ return a,b
+try:
+ subprocess.run(DOCKER+['run','--rm','--detach','--name',NAME,'--network=none','-e','POSTGRES_HOST_AUTH_METHOD=trust',IMAGE],check=True,capture_output=True,text=True)
+ for _ in range(100):
+  ready=subprocess.run(DOCKER+['exec',NAME,'sh','-c','test "$(cat /proc/1/comm)" = postgres && pg_isready -U postgres'],capture_output=True).returncode==0
+  if ready:break
+  time.sleep(.2)
+ else:raise AssertionError('Disposable PostgreSQL did not become ready')
+ q(f"create role anon nologin;create role authenticated nologin;create role service_role nologin;create schema auth;create table auth.users(id uuid primary key,is_anonymous boolean default true);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public to anon,authenticated,service_role;insert into auth.users(id) values('{OWNER}'),('{OTHER}');")
+ for migration in sorted((ROOT/'supabase/migrations').glob('*.sql')):q(migration.read_text())
+ q(f"insert into public.enzy_devices(auth_user_id,device_label,role,status,paired_at) values('{OWNER}','TEST owner','owner','active',now()),('{OTHER}','TEST second owner','owner','active',now());")
+ device=q(f"select id from public.enzy_devices where auth_user_id='{OWNER}';")
+ supplier=q(f"insert into public.enzy_suppliers(business_id,name,created_by_device_id) select id,'TEST concurrency supplier','{device}' from public.enzy_businesses returning id;")
+ product=q(f"insert into public.enzy_products(business_id,name,sku_code,weight_g,pcs_per_pack,created_by_device_id) select id,'TEST concurrency product','TEST-20',20,25,'{device}' from public.enzy_businesses returning id;")
+ warehouse=q("select id from public.enzy_stock_locations where system_key='finished_primary';")
+ destination=post('location',{'label':'TEST destination','kind':'finished_warehouse'})['location_id']
+ def make_batch():
+  purchase=post('purchase',{'supplier_id':supplier,'weight_g':1000,'goods_cost_rp':7500,'acquisition_extra_rp':0,'reason':'TEST concurrency receipt'});assert purchase.get('ok'),purchase
+  batch=post('production',{'product_id':product,'inputs':[{'lot_id':purchase['lot_id'],'grams':1000}],'good_pcs':50,'good_output_weight_g':1000,'defect_weight_g':0,'waste_g':0,'packaging_cost_rp':0,'labor_cost_rp':0,'other_cost_rp':0,'reason':'TEST concurrency batch'});assert batch.get('ok'),batch;return batch
+ batch=make_batch()
+ transfer={'lot_id':batch['lot_id'],'from_location_id':warehouse,'to_location_id':destination,'quantity':30,'reason':'TEST competing transfer'}
+ a,b=race(statement('transfer',transfer),statement('transfer',transfer,OTHER))
+ assert a.get('ok') and b=={'error':'INSUFFICIENT_STOCK'},(a,b)
+ assert q(f"select quantity from public.enzy_inventory_balances where lot_id='{batch['lot_id']}' and location_id='{warehouse}';")=='20'
+ print('PASS: two real concurrent transfers, one succeeds and one insufficient; balance never negative')
+ batch=make_batch();key=str(uuid.uuid4());transfer.update(lot_id=batch['lot_id'],quantity=10)
+ a,b=race(statement('transfer',transfer,key=key),statement('transfer',transfer,key=key))
+ assert a.get('ok') and b.get('replayed') and a['operation_id']==b['operation_id'],(a,b)
+ assert q(f"select quantity from public.enzy_inventory_balances where lot_id='{batch['lot_id']}' and location_id='{warehouse}';")=='40'
+ assert q(f"select count(*) from public.enzy_stock_movements where operation_id='{a['operation_id']}';")=='2'
+ print('PASS: simultaneous identical request key produces one receipt and one ledger pair')
+ batch=make_batch();transfer.update(lot_id=batch['lot_id'],quantity=10)
+ a,b=race(statement('transfer',transfer),statement('reverse',{'operation_id':batch['operation_id'],'reason':'TEST reverse race'},OTHER))
+ assert a.get('ok') and b=={'error':'INSUFFICIENT_STOCK'},(a,b)
+ print('PASS: distinct action transfer/reversal race serializes and rejects dependent reversal atomically')
+ bad=q("select count(*) from public.enzy_inventory_balances b left join (select business_id,location_id,lot_id,sum(delta) qty from public.enzy_stock_movements group by business_id,location_id,lot_id) m using(business_id,location_id,lot_id) where b.quantity<>coalesce(m.qty,0) or b.quantity<0;")
+ assert bad=='0',bad
+ print('PASS: every projection equals ledger sum after races; no negative stock')
+finally:
+ subprocess.run(DOCKER+['rm','--force',NAME],capture_output=True)

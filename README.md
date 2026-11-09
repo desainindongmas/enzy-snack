@@ -1,4 +1,4 @@
-# Enzy Snack — Phase 3: data usaha dan histori harga
+# Enzy Snack — Phase 4: pembelian, produksi, dan stok
 
 Scaffold lokal React + TypeScript + Vite + Tailwind 4, komponen Button pola shadcn/ui (Radix/CVA), Supabase anonymous Auth dan PWA. Bahasa Indonesia, layout mobile dengan breakpoint 760px dan target 360px. Palet mengacu logo lampiran; gambar logo asli tidak tersedia sebagai file lokal sehingga ikon sementara dan ilustrasi kemasan CSS digunakan, bukan pengganti aset final.
 
@@ -15,7 +15,7 @@ npm run build
 
 Anonymous sign-in harus diaktifkan pada proyek Supabase. Tidak perlu email/password. Jika env kosong, aplikasi menolak aktivasi dan menampilkan pesan penyiapan; tidak memakai backend/data contoh. Jangan pernah mengisi service-role/secret key ke variabel VITE_. Jangan menerapkan pada database existing sebelum audit RLS lengkap.
 
-Phase 2 menambahkan API Cloudflare Pages Functions dan pairing RPC atomik, status perangkat serta owner issue/list/revoke. Seluruh API fail-closed sampai backend dikonfigurasi. Tidak ada public claim-owner, data bisnis contoh, atau finance/inventory posting. Bootstrap owner dan migration tetap manual, bukan bagian build/deploy. Lihat [Setup Phase 2](docs/PHASE-2-SETUP.md).
+Phase 2 menambahkan API Cloudflare Pages Functions dan pairing RPC atomik, status perangkat serta owner issue/list/revoke. Seluruh API fail-closed sampai backend dikonfigurasi. Tidak ada public claim-owner atau data bisnis contoh. Posting stok ditambahkan pada Phase 4; posting finance belum tersedia. Bootstrap owner dan migration tetap manual, bukan bagian build/deploy. Lihat [Setup Phase 2](docs/PHASE-2-SETUP.md).
 
 ## Dokumen
 
@@ -26,13 +26,13 @@ Phase 2 menambahkan API Cloudflare Pages Functions dan pairing RPC atomik, statu
 - [Bootstrap dan rollback admin](docs/BOOTSTRAP-OWNER.md)
 - [Checklist, risiko, handoff Phase 2](docs/PHASE-2-HANDOFF.md)
 
-Draft SQL versioned berada di supabase/migrations; hanya persiapan untuk review, TIDAK dijalankan. Script bootstrap di supabase/admin terpisah dari migration. Functions Deno adalah stub, tidak dideploy. Tidak ada koneksi ke Supabase produksi. Hasil test lokal jangan dianggap bukti RLS database aman.
+SQL versioned berada di supabase/migrations dan diterapkan manual oleh pengguna, bukan saat build/deploy. Script bootstrap di supabase/admin terpisah dari migration. API aktif memakai Pages Functions; folder Functions Deno lama tetap stub. Pengembang tidak menjalankan SQL ke proyek pengguna. Hasil test lokal jangan dianggap bukti RLS proyek live aman.
 
 ## Starter pack dan pengujian SQL lokal
 
 Dokumen yang sebelumnya kurang sekarang lengkap, diaudit dan disimpan lokal tanpa perubahan di `references/starter-pack/`; checksum lokal di `references/SHA256.json`. Folder `references/` tidak dilacak Git untuk menghindari publikasi dokumen bisnis asli. `AGENTS.md` mengikuti paket. SQL referensi tidak dieksekusi. Draft versioned disiapkan untuk fresh schema dan menolak schema Enzy existing. Tidak ada database bisnis yang dibuat di Supabase.
 
-`npm test` juga memuat migration baru ke PostgreSQL WASM disposable (PGlite) dengan fixture Auth/roles. Tidak perlu Docker, proyek cloud, kredensial atau API berbayar. Tes ini tidak menggantikan Supabase integration tests. Pairing expiry/reuse masih diuji sebagai penolakan stub, bukan algoritma pairing nyata.
+`npm test` juga memuat migration baru ke PostgreSQL WASM disposable (PGlite) dengan fixture Auth/roles. Tidak perlu Docker, proyek cloud, kredensial atau API berbayar. Tes ini tidak menggantikan Supabase integration tests. Pairing expiry/reuse, audit, role dan idempotency diuji menggunakan fungsi SQL sebenarnya dengan fixture lokal.
 
 ## Git dan data privat
 
@@ -59,3 +59,11 @@ Menu pemilik sekarang memisahkan Data usaha dan Perangkat tim. Supplier, SKU, wa
 Ikuti [panduan Phase 3](docs/PHASE-3-SETUP.md) untuk menjalankan **satu migration baru** secara manual di TEST. Jangan mengulang migration 001/002 atau bootstrap owner. Jika migration belum ada, menu Data usaha fail-closed dengan pesan yang jelas; menu pairing tetap tersedia.
 
 `npm run test:browser` menjalankan Chromium dengan endpoint fixture, bukan Supabase live. Gunakan browser Playwright yang terpasang, `/usr/bin/chromium` pada managed Linux, atau `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` untuk memilih binary lokal. Screenshot/report lokal tidak dilacak Git.
+
+## Phase 4 — produksi dan stok
+
+Menu **Produksi & Stok** menambahkan penerimaan bahan per lot/harga, repacking multi-lot dengan rekonsiliasi gram, hasil produk jadi dalam pcs, transfer lokasi dan pembalikan append-only. Perangkat produksi dapat mencatat repacking; lapangan hanya melihat muatannya sendiri. Nominal biaya hanya dibaca pemilik. Biaya yang belum diketahui tetap NULL/COST_INCOMPLETE; tidak dihitung sebagai nol atau laba final.
+
+Ikuti [panduan Phase 4](docs/PHASE-4-SETUP.md) dan jalankan **hanya migration baru** `20261109141211_inventory_lots_batches.sql` di proyek TEST. Env dan owner tidak perlu diubah. Tidak ada seed saldo atau stok awal, penjualan, kunjungan, retur, komisi maupun posting kas. Jika SQL belum dipasang, menu master/perangkat tetap tersedia.
+
+Verifikasi tambahan: `python tests/postgres-concurrency.py` memakai Docker daemon lokal pada `/var/run/docker.sock` dan image PostgreSQL 17 resmi yang dipin digest. Container disposable tanpa jaringan/host port, tidak menerima URL database live; Docker harus tersedia dan image perlu diunduh bila belum ada. Tes ini membuktikan dua koneksi nyata bersaing atas stok/request/pembalikan. Lihat [hasil dan batas verifikasi](docs/VERIFICATION.md).

@@ -39,6 +39,10 @@ const messages:Record<string,string>={
  CONFLICT:'Data sudah berubah, kode produk sudah dipakai, atau periode harga bertabrakan. Muat ulang dan periksa isian.',
  INVALID_REFERENCE:'Produk, warung, atau agen tidak ditemukan atau sudah diarsipkan.',
  NOT_FOUND:'Data tidak ditemukan. Muat ulang daftar.',
+ INVENTORY_REQUIRED:'Produksi dan stok belum siap. Jalankan SQL Phase 4 melalui admin Supabase terlebih dahulu.',
+ INSUFFICIENT_STOCK:'Stok di lokasi asal tidak cukup. Muat ulang saldo; semua perubahan pada percobaan ini dibatalkan.',
+ WEIGHT_MISMATCH:'Gram bahan terpakai harus sama dengan berat isi produk baik + berat cacat + susut/terbuang.',
+ EXPIRED_LOT:'Lot sudah melewati tanggal kedaluwarsa dan tidak dapat dipakai atau dipindahkan untuk distribusi.',
 };
 export async function api<T>(path:string,body?:unknown):Promise<T>{
  if(!supabase)throw new Error(messages.SETUP_REQUIRED);

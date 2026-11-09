@@ -25,3 +25,9 @@ Role NULL dibolehkan untuk pending; active tidak boleh NULL. FK auth tidak casca
 ## Implementasi Phase 3
 
 Migration `20261109130426_master_data_pricing.sql` menambahkan konfigurasi satu bisnis, empat tabel master, price agreements periodik, audit dan request idempotency, serta RPC owner-only. Tidak mengubah devices/invites/owner yang sudah ada. Penugasan lapangan historis dan snapshot transaksi belum diimplementasikan karena memerlukan engine kunjungan/stock pada fase lanjut. Lihat PHASE-3-SETUP untuk langkah manual TEST dan batas UAT.
+
+## Implementasi Phase 4
+
+Migration `20261109141211_inventory_lots_batches.sql` setelah Phase 3 menambah lokasi, operasi immutable, pembelian, batch/input, lot, saldo projection, ledger, audit dan idempotency receipt. RPC service-only baru memakai helper di schema privat, active device/role check, persisted rate limits, business-wide transaction advisory lock dan bucket `FOR UPDATE`. Penggunaan raw gram dan finished pcs dipisahkan; biaya nullable tetap incomplete.
+
+Hanya konfigurasi raw/finished/quarantine dibuat tanpa kuantitas. Tidak mengubah migration lama, owner, harga, atau data pengguna. Jalankan file baru secara manual di TEST sesuai PHASE-4-SETUP.md. Pengembang hanya menguji database disposable; tidak melakukan remote migration. Rollback bisnis memakai reversal beralasan, bukan menghapus ledger/tabel. Stok awal/legacy membutuhkan cut-off dan rencana rekonsiliasi tersendiri, bukan pembelian fiktif.
