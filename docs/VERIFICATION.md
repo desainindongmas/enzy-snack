@@ -36,3 +36,11 @@ Dokumentasi inisialisasi Supabase diperiksa; changelog Markdown tidak dapat diba
 - Percobaan browser awal sandbox gagal bind/connect localhost (EPERM). Pengujian kemudian berhasil pada executor dengan izin proses yang sesuai, tanpa mengubah pembatasan origin/Auth/data aplikasi.
 
 Belum: pemeriksaan schema/grants/advisors proyek Supabase sebenarnya (connector menolak akses), penerapan SQL manual TEST oleh user, JWT/Pages/PostgREST end-to-end live, true multi-connection concurrency PostgreSQL, backup/restore dan stock/finance engine. Tidak menjalankan migration remote atau membuat admin kedua. Panduan aktivasi: PHASE-3-SETUP.md.
+
+## Regresi layar putih saat membuka Harga & Riwayat
+
+Masalah direproduksi di Chromium dengan daftar Produk terisi sebelum pindah ke Harga & Riwayat: regression test gagal pada baseline. Penyebab: kind tab berubah pada render sebelum useEffect menghapus rows tab lama; renderer harga menerima baris profil tanpa valid_from sehingga format tanggal melempar RangeError. Supplier kosong kebetulan tidak memicu pemformatan baris sehingga menjadi workaround.
+
+Perbaikan mengikat hasil list (records/count/loading/error) pada key query lengkap: kind, pencarian, halaman, arsip dan reload. Render menampilkan loading sampai ada hasil yang sesuai; hasil tab lama tidak ditafsirkan sebagai schema tab baru. Active-request cleanup tetap menolak response terlambat. Error mutasi dipisahkan dari error list. Formatter tanggal juga memakai label eksplisit bila tanggal kosong/invalid, tanpa mengarang timestamp.
+
+103/103 tes lokal dalam 9 file dan 7/7 tes browser Chromium 360px lulus. Tiga regression test baru mencakup daftar Produk/Warung/Agen yang sudah terisi, perpindahan bolak-balik, dan refresh sebelum membuka harga; tidak ada pageerror. Dua tes formatter memverifikasi WIB serta missing/invalid date. TypeScript/Vite build lulus. Tidak ada SQL, migration, env/secret, hak akses, atau data live yang diubah; tidak perlu mengulang SQL di Supabase. Pengujian browser memakai fixture API/Auth, bukan akses database user.

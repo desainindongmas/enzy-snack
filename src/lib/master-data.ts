@@ -14,4 +14,9 @@ export function listMaster(kind:MasterKind,search='',page=1,include_archived=fal
 }
 export const mutateMaster=(action:'save'|'archive'|'price',kind:MasterKind,record:Record<string,unknown>,request_id:string)=>api<{ok:true;record:MasterRecord}>('master/'+action,{kind,record,request_id});
 export const rupiah=(amount:number)=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(amount);
-export const jakartaTime=(value:string)=>new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Jakarta'}).format(new Date(value))+' WIB';
+export function jakartaTime(value:string|null|undefined):string {
+ if(!value)return 'Tanggal belum tersedia';
+ const date=new Date(value);
+ if(!Number.isFinite(date.getTime()))return 'Tanggal tidak valid';
+ return new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Jakarta'}).format(date)+' WIB';
+}

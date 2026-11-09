@@ -67,3 +67,27 @@ test('missing Phase 3 migration keeps device management accessible',async({page}
  await fixture(page);await page.route('**/api/master?**',route=>route.fulfill({status:503,json:{error:'MIGRATION_REQUIRED'}}));
  await page.goto('/');await expect(page.getByText(/Jalankan SQL Phase 3/)).toBeVisible();await page.getByRole('button',{name:'Perangkat tim',exact:true}).click();await expect(page.getByRole('button',{name:'Buat kode pairing',exact:true})).toBeVisible();
 });
+for(const source of ['Produk','Warung','Agen'])test(`opens price history after populated ${source} without crashing`,async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ const records=await fixture(page);
+ const product={id:crypto.randomUUID(),name:'TEST source product',sku_code:'TEST-20',weight_g:20,pcs_per_pack:25,is_active:true,version:1};
+ const store={id:crypto.randomUUID(),name:'TEST source store',is_active:true,version:1};
+ const agent={id:crypto.randomUUID(),name:'TEST source agent',is_active:true,version:1};
+ records.products.push(product);records.stores.push(store);records.agents.push(agent);
+ records.prices.push({id:crypto.randomUUID(),product_id:product.id,store_id:store.id,channel:'direct',store_price_rp:1500,valid_from:new Date().toISOString(),valid_to:null,change_reason:'TEST existing history'});
+ await page.goto('/');await expect(page.getByRole('heading',{name:product.name,exact:true})).toBeVisible();
+ if(source!=='Produk'){
+  await page.getByRole('button',{name:source,exact:true}).click();
+  await expect(page.getByRole('heading',{name:source==='Warung'?store.name:agent.name,exact:true})).toBeVisible();
+ }
+ await page.getByRole('button',{name:'Harga & Riwayat',exact:true}).click();
+ await expect(page.getByText('TEST existing history',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Produk',exact:true}).click();
+ await expect(page.getByRole('heading',{name:product.name,exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Harga & Riwayat',exact:true}).click();
+ await expect(page.getByText('TEST existing history',{exact:true})).toBeVisible();
+ await page.reload();await expect(page.getByRole('heading',{name:product.name,exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Harga & Riwayat',exact:true}).click();
+ await expect(page.getByText('TEST existing history',{exact:true})).toBeVisible();
+ expect(errors).toEqual([]);
+});

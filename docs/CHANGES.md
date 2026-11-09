@@ -26,3 +26,7 @@ TODO: review migration di Supabase test; implementasi secure pairing dan status 
 - Cloudflare boundary master API mewarisi verifikasi JWT, origin dan ingress; body cap 8 KB dan persisted throttle. Pesan khusus jika SQL belum dipasang.
 - Menu Data usaha terpisah dari Perangkat tim; employee tetap tidak mendapat akses data master. Layout owner penuh dan mobile 360px diuji.
 - 101 tes unit/integrasi lokal, 4 browser fixture tests, build dan Functions compile lulus. Source siap untuk review/manual migration TEST; bukan klaim engine bisnis lengkap atau live database telah diubah.
+
+## Perbaikan navigasi Harga & Riwayat
+
+Hasil list kini terikat pada query/tab yang memuatnya sehingga profil dari tab sebelumnya tidak pernah dirender sebagai harga pada frame transisi. Memperbaiki layar putih yang muncul dari tab Produk, Warung atau Agen terisi. Formatter tanggal menjaga data kosong/invalid tetap terlihat sebagai label. Regresi browser mencakup switching berulang dan refresh; tidak perlu migration atau perubahan data pengguna.
