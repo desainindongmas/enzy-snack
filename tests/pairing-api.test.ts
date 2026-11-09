@@ -51,3 +51,10 @@ describe('Pages pairing API boundary',()=>{
   const b=backend();expect((await handlePairing(request('/api/pairing/redeem',{code:'a'.repeat(3000)}),env,b)).status).toBe(400);expect(b.action).not.toHaveBeenCalled();
  });
 });
+it('backend accepts copied Data API base URL but rejects arbitrary paths',async()=>{
+ const b=backend({device:{status:'pending'}});
+ expect((await handlePairing(request('/api/device'),{...env,SUPABASE_URL:'https://fixture.supabase.co/rest/v1/'},b)).status).toBe(200);
+ const rejected=backend();
+ expect((await handlePairing(request('/api/device'),{...env,SUPABASE_URL:'https://fixture.supabase.co/rest/v1/stores'},rejected)).status).toBe(503);
+ expect(rejected.verify).not.toHaveBeenCalled();
+});

@@ -1,4 +1,5 @@
 import {createClient} from '@supabase/supabase-js';
+import {normalizeSupabaseUrl} from '../src/lib/supabase-url';
 export interface PairingEnv {
  SUPABASE_URL:string; SUPABASE_SERVICE_ROLE_KEY:string;
  APP_ORIGIN:string; PAIRING_IP_HASH_SECRET:string; PAIRING_ENABLED:string;
@@ -34,6 +35,8 @@ export async function handlePairing(request:Request,env:PairingEnv,backend?:Back
   const url=new URL(request.url);const route=routes[url.pathname];if(!route)return json({error:'NOT_FOUND'},404);
   if(request.method!==route.method)return json({error:'METHOD_NOT_ALLOWED'},405);
   if(env.PAIRING_ENABLED!=='true'||!env.SUPABASE_URL||!env.SUPABASE_SERVICE_ROLE_KEY||!env.APP_ORIGIN||env.PAIRING_IP_HASH_SECRET?.length<32||!env.PAIRING_IP_HASH_SECRET)return json({error:'SETUP_REQUIRED'},503);
+  let projectUrl:string;
+  try{projectUrl=normalizeSupabaseUrl(env.SUPABASE_URL)}catch{return json({error:'SETUP_REQUIRED'},503)}
   if(url.origin!==env.APP_ORIGIN||(request.headers.has('origin')&&request.headers.get('origin')!==env.APP_ORIGIN))return json({error:'FORBIDDEN'},403);
   // Only Cloudflare Pages runtime supplies request.cf and overwrites CF-Connecting-IP.
   // Do not accept X-Forwarded-For or any IP from the request JSON.
@@ -45,7 +48,7 @@ export async function handlePairing(request:Request,env:PairingEnv,backend?:Back
   if(request.method==='POST'){
    try{payload=await boundedJson(request)}catch{return json({error:'INVALID_REQUEST'},400)}
   }
-  const client=backend?null:createClient(env.SUPABASE_URL,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  const client=backend?null:createClient(projectUrl,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   const service:Backend=backend??{
    async verify(token){const {data,error}=await client!.auth.getUser(token);return !error&&data.user?data.user.id:null},
    async action(actor,action,ipHash,body){const {data,error}=await client!.rpc('enzy_pairing_action',{p_actor:actor,p_action:action,p_ip_hash:ipHash,p_payload:body});return error?null:data},

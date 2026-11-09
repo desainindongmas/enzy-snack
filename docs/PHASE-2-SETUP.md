@@ -59,3 +59,11 @@ Setelah pairing live lulus UAT, lanjutkan master data Phase 3. Pairing aktif tid
 Pesan startup kini memuat kode yang aman dibagikan: SETUP-01 pengaturan VITE belum terbaca pada build/environment yang digunakan; SETUP-02 client config invalid; SETUP-03 anonymous provider nonaktif di proyek yang dihubungi; SETUP-04 CAPTCHA; SETUP-05 rate limit; SETUP-06 koneksi/provider tidak terjangkau; SETUP-07 kunci publik/sesi tidak diterima; SETUP-08 belum terklasifikasi; SETUP-09 storage browser tidak tersedia. Ini petunjuk diagnosis, bukan bukti root cause untuk semua kasus.
 
 Tombol Coba koneksi lagi mengulangi penyiapan sesi tanpa menghapus identitas yang tersimpan. Jangan menghapus data situs/merotasi key/menjalankan ulang SQL hanya berdasarkan pesan generik. Jika build tidak membaca VITE, cocokkan Production vs Preview serta commit deployment terlebih dahulu. Jangan mengirim nilai secret saat meminta bantuan. Untuk memuat patch, gunakan banner Perbarui aplikasi setelah deployment sukses; jangan reset storage perangkat yang sudah dipasangkan.
+
+## Koreksi alamat Data API yang tersalin
+
+`VITE_SUPABASE_URL` dan `SUPABASE_URL` harus berupa alamat dasar proyek, misalnya `https://example.supabase.co`, bukan alamat Data API `https://example.supabase.co/rest/v1/`. SDK menambahkan `/auth/v1` dan `/rest/v1` sendiri. Mengirim Data API URL langsung ke SDK dapat menghasilkan endpoint Auth `/rest/v1/auth/v1/signup` dan RPC `/rest/v1/rest/v1/rpc/...` yang salah.
+
+Frontend dan backend kini memakai normalisasi bersama: root atau suffix persis `/rest/v1[/]` diterima dan dikembalikan sebagai origin yang sama. Path lain, credentials dalam URL, query/hash, dan HTTP non-loopback ditolak. Tidak ada hardcode proyek user, fallback key, perubahan RLS, penghapusan sesi, atau promosi owner. Root custom HTTPS dan localhost development tetap didukung. Periksa deployment baru setelah memperbaiki variabel; jangan membagikan nilai kunci.
+
+Rujukan SDK: https://supabase.com/docs/reference/javascript/initializing

@@ -1,11 +1,12 @@
 import {createClient} from '@supabase/supabase-js';
 import {SessionSetupError} from './session-errors';
+import {normalizeSupabaseUrl} from './supabase-url';
 const url=import.meta.env.VITE_SUPABASE_URL?.trim();
 const key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
 let configurationError:SessionSetupError|null=null;
 function configuredClient(){
  if(!url||!key){configurationError=new SessionSetupError('CONFIG_MISSING');return null}
- try{return createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})}
+ try{return createClient(normalizeSupabaseUrl(url),key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}})}
  catch{configurationError=new SessionSetupError('CONFIG_INVALID');return null}
 }
 export const supabase=configuredClient();

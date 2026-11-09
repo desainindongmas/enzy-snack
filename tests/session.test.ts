@@ -20,3 +20,10 @@ it('invalid client config fails closed without crashing module import',async()=>
  await expect(initializeSession()).rejects.toMatchObject({setupCode:'CONFIG_INVALID'});
  expect(signInAnonymously).not.toHaveBeenCalled();
 });
+it('frontend initializes SDK with project root when Data API URL was configured',async()=>{
+ vi.stubEnv('VITE_SUPABASE_URL','https://example.supabase.co/rest/v1/');
+ getSession.mockResolvedValue({data:{session:{user:{id:'existing'}}},error:null});
+ const {initializeSession}=await import('../src/lib/supabase');
+ expect(await initializeSession()).toBe('existing');
+ expect(createClient).toHaveBeenCalledWith('https://example.supabase.co','public-test-key',expect.any(Object));
+});

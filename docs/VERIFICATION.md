@@ -19,3 +19,9 @@ Petunjuk aktivasi: PHASE-2-SETUP.md. Keberhasilan tes lokal tidak berarti bisnis
 ## Perbaikan diagnosis startup
 
 60/60 tes dalam 6 file lulus; build TypeScript/Vite lulus. Lima tes tambahan membuktikan klasifikasi kegagalan konfigurasi/Auth, redaksi pesan provider, retry setelah kegagalan dan import fail-closed saat konfigurasi client invalid. UI menampilkan kode SETUP-01..09 tanpa nilai key/token/error body. Polling tidak berjalan sebelum identitas sesi tersedia, agar pesan startup tidak tertimpa. Retry tidak menghapus storage atau mempromosikan perangkat. Penyebab konfigurasi live user belum terverifikasi; screenshot menunjukkan belum ada identitas HP, bukan bukti tunggal variabel salah.
+
+## Perbaikan alamat proyek vs Data API URL
+
+76/76 tes lokal dalam 7 file lulus; TypeScript/Vite build dan Wrangler Pages Functions compile lulus. Tes SDK sebenarnya dengan transport HTTP fixture membuktikan signup menuju `/auth/v1/signup` dan RPC menuju satu `/rest/v1/rpc/enzy_pairing_action`, tanpa suffix ganda. Tes config frontend dan boundary backend mencakup URL Data API; path/credentials/query/fragment yang tidak diharapkan ditolak. Tidak menggunakan jaringan Supabase atau membuat akun anonymous baru dalam tes tersebut.
+
+Dokumentasi inisialisasi Supabase diperiksa; changelog Markdown tidak dapat dibaca oleh alat web (content-type), sehingga indeks HTML changelog diperiksa. Tidak ada perubahan SDK/CLI/schema pada perbaikan ini. Akses connector ke proyek Supabase user ditolak oleh kontrol akses; konfigurasi Auth, log live dan keberhasilan signup nyata belum dapat diperiksa. Tidak ada perubahan SQL atau kunci. Validasi live memerlukan deployment Cloudflare baru dan percobaan dari HP user.
