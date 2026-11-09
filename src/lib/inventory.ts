@@ -15,7 +15,7 @@ export interface InventoryRow {
 export interface InventoryPage {records:InventoryRow[];count:number;page:number}
 export interface InventoryReceipt {ok:true;operation_id?:string;location_id?:string;lot_id?:string;lot_code?:string;quantity?:number;unit?:string;cost_status?:string;reverse_of?:string;replayed?:boolean}
 export const inventoryLabels:Partial<Record<InventoryKind,string>>={balances:'Stok per lokasi',purchases:'Pembelian bahan',batches:'Produksi',locations:'Lokasi stok',movements:'Riwayat gerak',operations:'Koreksi'};
-export const operationLabels:Record<string,string>={purchase:'Pembelian bahan',production:'Repacking',transfer:'Transfer stok',reversal:'Pembalikan',visit:'Kunjungan warung'};
+export const operationLabels:Record<string,string>={purchase:'Pembelian bahan',production:'Repacking',transfer:'Transfer stok',reversal:'Pembalikan',visit:'Kunjungan warung',opening:'Saldo awal'};
 export const locationLabels:Record<string,string>={raw_warehouse:'Gudang bahan',finished_warehouse:'Gudang produk jadi',field_custody:'Muatan lapangan',agent_custody:'Dalam penguasaan agen',return_quarantine:'Karantina retur',store_consignment:'Titipan warung'};
 export function inventoryKinds(role:Role):InventoryKind[]{return role==='owner'?['balances','purchases','batches','locations','movements','operations']:role==='production'?['balances','batches','movements']:['balances','movements']}
 export function listInventory(kind:InventoryKind,search='',page=1,extra:Record<string,string>={}){

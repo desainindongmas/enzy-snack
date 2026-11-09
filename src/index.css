@@ -8,3 +8,5 @@
 .visit-editor,.visits-panel{min-width:0}.visit-line{border:1px solid var(--line,#e5e4d9);border-radius:14px;padding:14px;margin:18px 0;min-width:0}.visit-line legend{font-weight:650;max-width:100%;overflow-wrap:anywhere}.visit-line p{overflow-wrap:anywhere}.visit-editor dl{overflow-wrap:anywhere}.visit-editor h4{margin-top:20px}
 
 .finance-panel,.money-editor{min-width:0}.money-summary{border:1px solid #e5e4d9;background:#f4f1df;border-radius:14px;padding:16px;margin:16px 0}.money-summary p,.money-editor p{overflow-wrap:anywhere}.money-summary strong{display:block}.money-editor h4{margin-top:20px}
+
+.readiness-panel,.opening-editor{min-width:0}.readiness-panel h4{margin:22px 0 12px}.check-line{display:flex!important;gap:10px;align-items:flex-start;font-size:12px;line-height:1.7;margin:18px 0!important}.check-line input[type=checkbox]{width:18px;min-width:18px;height:18px;min-height:18px;flex:0 0 18px;margin:4px 0 0;padding:0;accent-color:#103f48}

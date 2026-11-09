@@ -108,3 +108,14 @@ it('finance setup and dependency failures are distinct and never return optimist
  const r=await handlePairing(request('/api/finance?kind=accounts'),env,backend({error:'FINANCE_REQUIRED'}));expect(r.status).toBe(503);expect(await r.json()).toEqual({error:'FINANCE_REQUIRED'});
  const failed=await handlePairing(request('/api/visits/reverse',{record:{},request_id:'TEST'}),env,backend({error:'FINANCE_DEPENDENCY'}));expect(failed.status).toBe(400);expect(await failed.json()).toEqual({error:'FINANCE_DEPENDENCY'});
 });
+it('readiness routes bind verified identity and reject query/body injection',async()=>{
+ const b=backend({integrity_ok:true});expect((await handlePairing(request('/api/readiness'),env,b)).status).toBe(200);expect(b.action).toHaveBeenCalledWith('verified-user','readiness_report',expect.any(String),{});
+ const preview=backend();expect((await handlePairing(request('/api/readiness/opening-preview',{record:{physical_confirmed:true}}),env,preview)).status).toBe(200);expect(preview.action).toHaveBeenCalledWith('verified-user','readiness_opening_preview',expect.any(String),{record:{physical_confirmed:true}});
+ const invalid=backend();expect((await handlePairing(request('/api/readiness?actor=forged'),env,invalid)).status).toBe(400);expect(invalid.action).not.toHaveBeenCalled();
+ const forged=backend();expect((await handlePairing(request('/api/readiness/opening-post',{record:{},request_id:'TEST',actor:'forged'}),env,forged)).status).toBe(400);expect(forged.action).not.toHaveBeenCalled();
+});
+it('readiness setup/errors fail closed and bodies above 32 KB never reach backend',async()=>{
+ const r=await handlePairing(request('/api/readiness'),env,backend({error:'READINESS_REQUIRED'}));expect(r.status).toBe(503);expect(await r.json()).toEqual({error:'READINESS_REQUIRED'});
+ const locked=await handlePairing(request('/api/readiness/opening-post',{record:{},request_id:'TEST'}),env,backend({error:'OPENING_NOT_FRESH'}));expect(locked.status).toBe(400);expect(await locked.json()).toEqual({error:'OPENING_NOT_FRESH'});
+ const b=backend();expect((await handlePairing(request('/api/readiness/evidence',{record:{note:'x'.repeat(33000)},request_id:'TEST'}),env,b)).status).toBe(400);expect(b.action).not.toHaveBeenCalled();
+});

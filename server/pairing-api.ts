@@ -24,6 +24,10 @@ const routes:Record<string,{method:string;action:string}>={
  '/api/master/save':{method:'POST',action:'master_save'},
  '/api/master/archive':{method:'POST',action:'master_archive'},
  '/api/master/price':{method:'POST',action:'master_price'},
+ '/api/readiness':{method:'GET',action:'readiness_report'},
+ '/api/readiness/opening-preview':{method:'POST',action:'readiness_opening_preview'},
+ '/api/readiness/opening-post':{method:'POST',action:'readiness_opening_post'},
+ '/api/readiness/evidence':{method:'POST',action:'readiness_evidence'},
  '/api/finance':{method:'GET',action:'finance_list'},
  '/api/finance/account':{method:'POST',action:'finance_account'},
  '/api/finance/collect':{method:'POST',action:'finance_collect'},
@@ -74,26 +78,31 @@ export async function handlePairing(request:Request,env:PairingEnv,backend?:Back
   if(!/^Bearer [A-Za-z0-9._-]{16,4096}$/.test(auth))return json({error:'UNAUTHORIZED'},401);
   let payload:Record<string,unknown>={};
   if(request.method==='POST'){
-   try{payload=await boundedJson(request,route.action.startsWith('finance_')?8192:route.action.startsWith('visit_')?24576:route.action.startsWith('inventory_')?16384:route.action.startsWith('master_')?8192:2048)}catch{return json({error:'INVALID_REQUEST'},400)}
+   try{payload=await boundedJson(request,route.action.startsWith('readiness_')?32768:route.action.startsWith('finance_')?8192:route.action.startsWith('visit_')?24576:route.action.startsWith('inventory_')?16384:route.action.startsWith('master_')?8192:2048)}catch{return json({error:'INVALID_REQUEST'},400)}
   }
   const client=backend?null:createClient(projectUrl,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   const service:Backend=backend??{
    async verify(token){const {data,error}=await client!.auth.getUser(token);return !error&&data.user?data.user.id:null},
    async action(actor,action,ipHash,body){
-    const master=action.startsWith('master_'),inventory=action.startsWith('inventory_'),visit=action.startsWith('visit_'),finance=action.startsWith('finance_');
-    const {data,error}=await client!.rpc(finance?'enzy_finance_action':visit?'enzy_visit_action':inventory?'enzy_inventory_action':master?'enzy_master_action':'enzy_pairing_action',finance?
+    const master=action.startsWith('master_'),inventory=action.startsWith('inventory_'),visit=action.startsWith('visit_'),finance=action.startsWith('finance_'),readiness=action.startsWith('readiness_');
+    const {data,error}=await client!.rpc(readiness?'enzy_readiness_action':finance?'enzy_finance_action':visit?'enzy_visit_action':inventory?'enzy_inventory_action':master?'enzy_master_action':'enzy_pairing_action',readiness?
+     {p_actor:actor,p_action:action.slice(10),p_ip_hash:ipHash,p_payload:body}:finance?
      {p_actor:actor,p_action:action.slice(8),p_ip_hash:ipHash,p_payload:body}:visit?
      {p_actor:actor,p_action:action.slice(6),p_ip_hash:ipHash,p_payload:body}:inventory?
      {p_actor:actor,p_action:action.slice(10),p_ip_hash:ipHash,p_payload:body}:master?
      {p_actor:actor,p_action:action.slice(7),p_kind:body.kind,p_ip_hash:ipHash,p_payload:body}:
      {p_actor:actor,p_action:action,p_ip_hash:ipHash,p_payload:body});
-    if((master||inventory||visit||finance)&&error&&['42883','42P01','PGRST202'].includes(error.code))return {error:finance?'FINANCE_REQUIRED':visit?'VISITS_REQUIRED':inventory?'INVENTORY_REQUIRED':'MIGRATION_REQUIRED'};
+    if((master||inventory||visit||finance||readiness)&&error&&['42883','42P01','PGRST202'].includes(error.code))return {error:readiness?'READINESS_REQUIRED':finance?'FINANCE_REQUIRED':visit?'VISITS_REQUIRED':inventory?'INVENTORY_REQUIRED':'MIGRATION_REQUIRED'};
     return error?null:data;
    },
   };
   const actor=await service.verify(auth.slice(7));if(!actor)return json({error:'UNAUTHORIZED'},401);
   let code:string|undefined;
-  if(route.action.startsWith('finance_')){
+  if(route.action.startsWith('readiness_')){
+   if(route.action==='readiness_report'){
+    if(url.searchParams.size)return json({error:'INVALID_REQUEST'},400);
+   }else if(Object.keys(payload).some(k=>!['record','request_id'].includes(k))||!payload.record||typeof payload.record!=='object'||Array.isArray(payload.record)||(route.action!=='readiness_opening_preview'&&typeof payload.request_id!=='string'))return json({error:'INVALID_REQUEST'},400);
+  }else if(route.action.startsWith('finance_')){
    if(route.action==='finance_list'){
     if(Array.from(url.searchParams.keys()).some(k=>!['kind','page','search'].includes(k)))return json({error:'INVALID_REQUEST'},400);
     payload=Object.fromEntries(url.searchParams);
@@ -132,7 +141,7 @@ export async function handlePairing(request:Request,env:PairingEnv,backend?:Back
   }
   const result=await service.action(actor,route.action,await hashIp(ip,env.PAIRING_IP_HASH_SECRET),payload);
   if(!result)return json({error:'BACKEND_UNAVAILABLE'},503);
-  if(result.error){const status=['MIGRATION_REQUIRED','INVENTORY_REQUIRED','VISITS_REQUIRED','FINANCE_REQUIRED'].includes(String(result.error))?503:result.error==='CONFLICT'?409:result.error==='RATE_LIMITED'?429:['FORBIDDEN','DEVICE_REVOKED'].includes(String(result.error))?403:result.error==='UNAUTHORIZED'?401:400;return json({error:result.error},status)}
+  if(result.error){const status=['MIGRATION_REQUIRED','INVENTORY_REQUIRED','VISITS_REQUIRED','FINANCE_REQUIRED','READINESS_REQUIRED'].includes(String(result.error))?503:result.error==='CONFLICT'?409:result.error==='RATE_LIMITED'?429:['FORBIDDEN','DEVICE_REVOKED'].includes(String(result.error))?403:result.error==='UNAUTHORIZED'?401:400;return json({error:result.error},status)}
   return json(code?{...result,code}:result);
  }catch{return json({error:'BACKEND_UNAVAILABLE'},503)}
 }

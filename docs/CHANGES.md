@@ -67,3 +67,11 @@ Hasil list kini terikat pada query/tab yang memuatnya sehingga profil dari tab s
 - PNG transparan 1254×1254 disalin tanpa perubahan byte/artwork ke public/brand/enzy-snack-logo.png. Mengganti wordmark sementara di header/panel desktop serta ikon huruf E lama pada favicon/PWA/Apple touch icon.
 - Ukuran header disesuaikan agar badge terbaca di HP/desktop tanpa distorsi atau overflow. Manifest menyatakan ukuran raster asli; tidak mengklaim maskable/crop yang belum dibuat.
 - Gambar asli di-precache untuk offline; API bisnis tetap tidak di-cache. Build dan pemeriksaan browser produksi lokal (HP, desktop, ikon, SHA aset, offline dan no pageerror) lulus. Tidak ada perubahan SQL, keuangan, Auth, env atau data pengguna.
+
+## Phase 7
+
+- User mengonfirmasi seluruh data saat ini UJI. Menyiapkan jalur produksi terpisah tanpa reset/hapus/menganggap UJI sebagai saldo usaha nyata.
+- Owner readiness diagnostics untuk projection/ledger dua arah, jurnal/saldo/cadangan, invoice/komisi, titipan dan ACL/RLS. Evidence immutable ditandai owner_reported; tidak otomatis menyatakan live approved.
+- Opening stok/uang satu kali hanya pada database fresh; biaya belum diketahui tetap incomplete, nol perlu konfirmasi, periode/kewajiban lama perlu rekonsiliasi. Stok/uang serta ledger/audit/receipt diposting atomik tanpa omzet/komisi/modal baru. Reversal separuh opening diblokir.
+- Utilitas backup-crypto lokal AES-GCM/PBKDF2 dengan password tersembunyi, file 0600, authenticated header, no overwrite/partial output. Rehearsal pg_dump terenkripsi/pg_restore ke target PostgreSQL disposable memverifikasi seluruh row/grants/RLS, opening, retry dan partial remittance.
+- Menu dan panduan Bahasa Indonesia, SQL audit read-only, workflow backup aktual/produksi/cut-off dan batas managed Auth/Storage. Tidak ada remote backup/restore, proyek produksi dibuat, saldo nyata ditetapkan, secret/owner diubah atau admin kedua dipasang.

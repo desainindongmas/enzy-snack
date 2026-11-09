@@ -27,3 +27,8 @@ work/
 
 playwright-report/
 test-results/
+
+# Encrypted backups and local restore material never belong in the public repo
+*.enzybak
+*.partial-*
+private-backups/

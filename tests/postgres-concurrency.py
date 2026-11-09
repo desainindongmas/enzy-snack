@@ -56,6 +56,19 @@ try:
  product=q(f"insert into public.enzy_products(business_id,name,sku_code,weight_g,pcs_per_pack,created_by_device_id) select id,'TEST concurrency product','TEST-20',20,25,'{device}' from public.enzy_businesses returning id;")
  warehouse=q("select id from public.enzy_stock_locations where system_key='finished_primary';")
  destination=post('location',{'label':'TEST destination','kind':'finished_warehouse'})['location_id']
+ # One-time opening is tested before any synthetic trading transactions exist.
+ def rs(action,record,actor=OWNER,key=None):
+  body=json.dumps({'record':record,'request_id':key or str(uuid.uuid4())})
+  return f"select public.enzy_readiness_action({sql_quote(actor)}::uuid,{sql_quote(action)},{sql_quote(IP)},{sql_quote(body)}::jsonb);"
+ cash_body=json.dumps({'record':{'name':'TEST opening cash','kind':'cash','reason':'TEST opening config'},'request_id':str(uuid.uuid4())})
+ opening_cash=json.loads(q(f"select public.enzy_finance_action('{OWNER}','account','{IP}',{sql_quote(cash_body)}::jsonb);"))['account_id']
+ raw_warehouse=q("select id from public.enzy_stock_locations where system_key='raw_primary';")
+ opening={'effective_at':datetime.now(timezone.utc).isoformat(),'reason':'TEST simultaneous physical opening','physical_confirmed':True,'legacy_resolved':True,'stock':[{'kind':'raw','lot_code':'TEST-CONCURRENT-OPEN','location_id':raw_warehouse,'quantity':1000}],'money':[{'holder':'enzy','account_id':opening_cash,'amount_rp':'10000'}]}
+ opening_key=str(uuid.uuid4());a,b=race(rs('opening_post',opening,key=opening_key),rs('opening_post',opening,key=opening_key))
+ assert a.get('ok') and b.get('replayed') and a['opening_id']==b['opening_id'],(a,b)
+ assert q("select count(*) from public.enzy_openings;")=='1'
+ assert json.loads(q(rs('opening_post',opening,OTHER)))=={'error':'OPENING_NOT_FRESH'}
+ print('PASS: simultaneous opening replay creates one stock/cash opening; another owner cannot reopen')
  def make_batch():
   purchase=post('purchase',{'supplier_id':supplier,'weight_g':1000,'goods_cost_rp':7500,'acquisition_extra_rp':0,'reason':'TEST concurrency receipt'});assert purchase.get('ok'),purchase
   batch=post('production',{'product_id':product,'inputs':[{'lot_id':purchase['lot_id'],'grams':1000}],'good_pcs':50,'good_output_weight_g':1000,'defect_weight_g':0,'waste_g':0,'packaging_cost_rp':0,'labor_cost_rp':0,'other_cost_rp':0,'reason':'TEST concurrency batch'});assert batch.get('ok'),batch;return batch
@@ -158,6 +171,8 @@ try:
  print('PASS: financial journals balanced and every account projection equals ledger after races')
  bad=q("select count(*) from public.enzy_inventory_balances b left join (select business_id,location_id,lot_id,sum(delta) qty from public.enzy_stock_movements group by business_id,location_id,lot_id) m using(business_id,location_id,lot_id) where b.quantity<>coalesce(m.qty,0) or b.quantity<0;")
  assert bad=='0',bad
+ report=json.loads(q(f"select public.enzy_readiness_action('{OWNER}','report','{IP}','{{}}');"));assert report['integrity_ok'],report
+ print('PASS: readiness diagnostics agree after all stock/visit/finance races')
  print('PASS: every projection equals ledger sum after races; no negative stock')
 finally:
  subprocess.run(DOCKER+['rm','--force',NAME],capture_output=True)

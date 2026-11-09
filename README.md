@@ -1,4 +1,4 @@
-# Enzy Snack — Phase 6: keuangan, komisi dan setoran
+# Enzy Snack — Phase 7: kesiapan, backup/restore dan saldo awal
 
 Scaffold lokal React + TypeScript + Vite + Tailwind 4, komponen Button pola shadcn/ui (Radix/CVA), Supabase anonymous Auth dan PWA. Bahasa Indonesia, layout mobile dengan breakpoint 760px dan target 360px. Logo asli dari ZIP pemilik dipasang tanpa perubahan artwork pada header, panel besar, favicon dan ikon PWA; palet halaman mengikuti krem/teal/kuning/oranye logo.
 
@@ -85,3 +85,13 @@ Ikuti [setup dan UAT Phase 6](docs/PHASE-6-SETUP.md) untuk satu SQL baru `202611
 Jurnal seimbang + projection, invoice allocation, reservasi penguasaan, rate, audit dan idempotency diproses atomik pada server dengan lock yang sama lintas inventory/visit/finance. Nilai uang API string integer/UI BigInt. Tes PostgreSQL dua koneksi mencakup overcollection, cash overspend, duplicate receipt, confirmation race dan visit-reversal/payment dependencies.
 
 Logo inline kemudian dilengkapi ZIP pemilik; artwork asli kini dipasang sebagai asset tanpa perubahan. Wordmark fallback hanya dipakai jika file gambar gagal dimuat.
+
+## Phase 7 — persiapan operasional
+
+Pemilik mengonfirmasi proyek saat ini hanya berisi data UJI. Menu owner **Kesiapan usaha** memeriksa rekonsiliasi ledger/projection dari dua arah, jurnal, cadangan setoran, alokasi invoice/komisi, siklus titipan dan RLS/grants. Bukti backup/restore/UAT/access/cut-off dicatat sebagai laporan pemilik, bukan sertifikasi otomatis atau aktivasi produksi.
+
+Pembukaan fisik stok/uang hanya sekali pada database benar-benar baru, dengan ringkasan server, konfirmasi hitung fisik, rekonsiliasi kewajiban lama dan konfirmasi nol eksplisit. Posting atomik/idempotent tidak menciptakan penjualan/modal baru atau HPP palsu. Database UJI yang sudah bertransaksi menolak pembukaan; tidak ada reset/delete. Titipan/piutang/utang/komisi historis memerlukan penyelesaian/migrasi khusus, bukan diisi nol.
+
+Ikuti [setup Phase 7](docs/PHASE-7-SETUP.md) untuk satu migration baru `20261109182039_readiness_opening_balances.sql` di TEST dan rencana produksi terpisah. Tidak mengulang SQL lama/owner atau mengubah env TEST. Go-live belum dilakukan.
+
+`node scripts/backup-crypto.mjs encrypt|decrypt INPUT OUTPUT` mengenkripsi backup lokal dengan password terminal tersembunyi, AES-GCM dan output privat tanpa overwrite. `python tests/postgres-backup-restore.py` membuktikan dump→enkripsi→restore fixture PostgreSQL 17 ke database terpisah dan memeriksa data/ACL/RLS/rekonsiliasi/retry. Tidak menerima target remote atau melakukan backup proyek pengguna. Lihat [panduan admin backup/restore](docs/BACKUP-RESTORE.md) untuk cakupan managed Auth/Storage, off-site dan batas proof lokal.

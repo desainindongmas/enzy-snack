@@ -82,7 +82,7 @@ function StockCard({row,kind,owner,onReverse}:{row:InventoryRow;kind:InventoryKi
  {owner&&row.unit_cost_rp!=null&&<p>Biaya per {row.lot_kind==='raw'||kind==='purchases'?'gram':'pcs'}: {costText(row.unit_cost_rp)} (tampilan dibulatkan)</p>}
  {kind!=='locations'&&kind!=='operations'&&kind!=='movements'&&<p>Kedaluwarsa: {row.expiry_date??'Belum dicatat'}</p>}
  {row.reversed&&<span className="record-status">Sudah dibalikkan</span>}
- </div>{owner&&kind==='operations'&&row.kind!=='reversal'&&row.kind!=='visit'&&!row.reversed&&<button className="text-button danger" onClick={()=>onReverse(row)}>Balikkan catatan</button>}</li>;
+ </div>{owner&&kind==='operations'&&row.kind!=='reversal'&&row.kind!=='visit'&&row.kind!=='opening'&&!row.reversed&&<button className="text-button danger" onClick={()=>onReverse(row)}>Balikkan catatan</button>}</li>;
 }
 export default function InventoryPanel({role,onAccessError}:{role:Role;onAccessError:()=>void}){
  const tabs=inventoryKinds(role),[kind,setKind]=useState<InventoryKind>('balances'),[q,setQ]=useState(''),[page,setPage]=useState(1),[reload,setReload]=useState(0),[editor,setEditor]=useState<{action:InventoryAction;target?:InventoryRow}|null>(null),[receipt,setReceipt]=useState<InventoryReceipt|null>(null);
@@ -94,7 +94,7 @@ export default function InventoryPanel({role,onAccessError}:{role:Role;onAccessE
  {receipt&&<div className="stock-receipt" role="status"><strong>{receipt.location_id?'Lokasi berhasil dibuat':'Posting dikonfirmasi server'}</strong>{receipt.operation_id&&<p className="lot-code">Nomor transaksi: {receipt.operation_id}</p>}{receipt.lot_code&&<p className="lot-code">Lot: {receipt.lot_code}</p>}{receipt.quantity!=null&&<p>{quantityText(receipt.quantity,receipt.unit)}</p>}{receipt.cost_status==='COST_INCOMPLETE'&&<p>Biaya belum lengkap. Tidak ada laba final yang dihitung.</p>}</div>}
  <div className="master-filters"><input aria-label="Cari stok dan riwayat" placeholder="Cari nama atau kode lot…" value={q} onChange={e=>{setQ(e.target.value);setPage(1)}}/><button className="text-button" onClick={()=>setReload(n=>n+1)}>Perbarui stok</button></div>
  {data.error&&<p role="alert" className="notice">{data.error}</p>}
- {data.loading?<p role="status">Memuat stok…</p>:!data.error&&data.records.length===0?<div className="empty-state">Belum ada catatan yang sesuai. Stok awal belum diimpor; catat penerimaan baru melalui pemilik saat siap.</div>:<ul className="master-list">{data.records.map(row=><StockCard key={row.id} row={row} kind={kind} owner={role==='owner'} onReverse={r=>start('reverse',r)}/>)}</ul>}
+ {data.loading?<p role="status">Memuat stok…</p>:!data.error&&data.records.length===0?<div className="empty-state">Belum ada catatan yang sesuai. Periksa saldo awal dan penerimaan baru melalui pemilik sebelum memakai stok.</div>:<ul className="master-list">{data.records.map(row=><StockCard key={row.id} row={row} kind={kind} owner={role==='owner'} onReverse={r=>start('reverse',r)}/>)}</ul>}
  {!data.error&&<div className="pager"><button disabled={data.loading||page===1} onClick={()=>setPage(p=>p-1)}>Sebelumnya</button><span>Halaman {page} · {data.count} catatan</span><button disabled={data.loading||page*20>=data.count} onClick={()=>setPage(p=>p+1)}>Berikutnya</button></div>}
  </>}</section>;
 }
