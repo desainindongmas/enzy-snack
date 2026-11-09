@@ -109,6 +109,53 @@ try:
  assert a.get('ok') and b.get('replayed') and a['operation_id']==b['operation_id'],(a,b)
  assert q(f"select count(*) from public.enzy_visits where store_id='{store}';")=='1'
  print('PASS: simultaneous visit request replay returns one cycle and one immutable visit')
+ # Phase 6 financial posting uses the same lock as stock/visits.
+ def fs(action,record,actor=OWNER,key=None):
+  body=json.dumps({'record':record,'request_id':key or str(uuid.uuid4())})
+  return f"select public.enzy_finance_action({sql_quote(actor)}::uuid,{sql_quote(action)},{sql_quote(IP)},{sql_quote(body)}::jsonb);"
+ def fpost(action,record):return json.loads(q(fs(action,record)))
+ cash=fpost('account',{'name':'TEST cash concurrency','kind':'cash','reason':'TEST account'})['account_id']
+ line=q(f"select id from public.enzy_consignment_lines where cycle_id='{a['cycle_id']}';")
+ closing=vbody(store,results=[{'line_id':line,'sold':20,'returned_good':0,'returned_damaged':0,'returned_expired':0,'lost':0}])
+ closed=vpost('post',closing);assert closed.get('ok'),closed
+ collection={'visit_id':closed['operation_id'],'amount_rp':'20000','withheld_rp':'0','account_id':cash,'reason':'TEST simultaneous payment'}
+ a,b=race(fs('collect',collection),fs('collect',collection,OTHER))
+ assert a.get('ok') and b=={'error':'OVER_COLLECTION'},(a,b)
+ print('PASS: simultaneous payments cannot overcollect one verified invoice')
+ collection['amount_rp']='10000';key=str(uuid.uuid4());a,b=race(fs('collect',collection,key=key),fs('collect',collection,key=key))
+ assert a.get('ok') and b.get('replayed') and a['operation_id']==b['operation_id'],(a,b)
+ assert q(f"select balance_rp from public.enzy_money_balances where account_id='{cash}';")=='30000'
+ print('PASS: duplicate financial request creates one collection and one balanced journal')
+ expense={'account_id':cash,'amount_rp':'20000','category':'other','reason':'TEST competing cash out'}
+ a,b=race(fs('cash_out',expense),fs('cash_out',expense,OTHER))
+ assert a.get('ok') and b=={'error':'INSUFFICIENT_FUNDS'},(a,b)
+ print('PASS: simultaneous cash out cannot spend the same Enzy funds twice')
+ store=make_store();batch=make_batch();opening=vpost('post',vbody(store,[{'lot_id':batch['lot_id'],'source_location_id':warehouse,'quantity':10}]))
+ line=q(f"select id from public.enzy_consignment_lines where cycle_id='{opening['cycle_id']}';")
+ closed=vpost('post',vbody(store,results=[{'line_id':line,'sold':10,'returned_good':0,'returned_damaged':0,'returned_expired':0,'lost':0}]))
+ a,b=race(fs('collect',{'visit_id':closed['operation_id'],'amount_rp':'15000','withheld_rp':'0','account_id':cash,'reason':'TEST payment vs reversal'}),vs('reverse',{'operation_id':closed['operation_id'],'reason':'TEST simultaneous visit reversal'},OTHER))
+ assert a.get('ok') and b=={'error':'FINANCE_DEPENDENCY'},(a,b)
+ print('PASS: visit reversal vs payment serializes; stock/sale cannot reverse around received money')
+ agent=q(f"insert into public.enzy_agents(business_id,name,created_by_device_id) select id,'TEST concurrency agent','{device}' from public.enzy_businesses returning id;")
+ version=int(q(f"select version from public.enzy_store_state where store_id='{store}';"))
+ assigned=vpost('assign',{'store_id':store,'expected_version':version,'channel':'agent','agent_id':agent,'reason':'TEST agent assignment'});assert assigned.get('ok'),assigned
+ q(f"insert into public.enzy_price_agreements(business_id,product_id,agent_id,channel,store_price_rp,enzy_share_rp,valid_from,change_reason,created_by_device_id) select id,'{product}','{agent}','agent',1500,1300,now()-interval '1 day','TEST agent price','{device}' from public.enzy_businesses;")
+ batch=make_batch();opening=vpost('post',vbody(store,[{'lot_id':batch['lot_id'],'source_location_id':warehouse,'quantity':20}]))
+ line=q(f"select id from public.enzy_consignment_lines where cycle_id='{opening['cycle_id']}';")
+ closed=vpost('post',vbody(store,results=[{'line_id':line,'sold':12,'returned_good':8,'returned_damaged':0,'returned_expired':0,'lost':0}]))
+ collected=fpost('collect',{'visit_id':closed['operation_id'],'amount_rp':'18000','withheld_rp':'2400','reason':'TEST agent paid'});assert collected.get('ok'),collected
+ custody=q(f"select id from public.enzy_money_accounts where agent_id='{agent}';")
+ proposed=fpost('propose',{'account_id':custody,'destination_account_id':cash,'amount_rp':'15600','reason':'TEST agent remittance'});assert proposed.get('ok'),proposed
+ revenue_before=q("select sum(balance_rp) from public.enzy_money_balances b join public.enzy_money_accounts a on a.id=b.account_id where a.kind='revenue';")
+ confirm={'proposal_id':proposed['proposal_id'],'amount_rp':'10000','reason':'TEST competing confirmation'}
+ a,b=race(fs('confirm',confirm),fs('confirm',confirm,OTHER))
+ assert a.get('ok') and b=={'error':'OVER_REMITTANCE'},(a,b)
+ assert q("select sum(balance_rp) from public.enzy_money_balances b join public.enzy_money_accounts a on a.id=b.account_id where a.kind='revenue';")==revenue_before
+ assert q(f"select balance_rp from public.enzy_money_balances where account_id='{custody}';")=='5600'
+ print('PASS: simultaneous remittance confirmations cannot overreceive; revenue unchanged')
+ assert q("select count(*) from (select operation_id from public.enzy_money_ledger group by operation_id having sum(delta_rp)<>0) x;")=='0'
+ assert q("select count(*) from public.enzy_money_balances b left join (select business_id,account_id,sum(delta_rp) n from public.enzy_money_ledger group by business_id,account_id) l using(business_id,account_id) where b.balance_rp is distinct from coalesce(l.n,0);")=='0'
+ print('PASS: financial journals balanced and every account projection equals ledger after races')
  bad=q("select count(*) from public.enzy_inventory_balances b left join (select business_id,location_id,lot_id,sum(delta) qty from public.enzy_stock_movements group by business_id,location_id,lot_id) m using(business_id,location_id,lot_id) where b.quantity<>coalesce(m.qty,0) or b.quantity<0;")
  assert bad=='0',bad
  print('PASS: every projection equals ledger sum after races; no negative stock')

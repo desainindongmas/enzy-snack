@@ -98,3 +98,13 @@ it('visit setup and reconciliation errors fail closed and oversized body never r
  const failed=await handlePairing(request('/api/visits/post',{record:{},request_id:'TEST'}),env,backend({error:'VISIT_RECONCILIATION'}));expect(failed.status).toBe(400);expect(await failed.json()).toEqual({error:'VISIT_RECONCILIATION'});
  const b=backend();expect((await handlePairing(request('/api/visits/post',{record:{reason:'x'.repeat(26000)},request_id:'TEST'}),env,b)).status).toBe(400);expect(b.action).not.toHaveBeenCalled();
 });
+it('finance binds verified identity and rejects arbitrary query/body and oversized writes',async()=>{
+ const b=backend({records:[],count:0,page:1});expect((await handlePairing(request('/api/finance?kind=invoices'),env,b)).status).toBe(200);expect(b.action).toHaveBeenCalledWith('verified-user','finance_list',expect.any(String),{kind:'invoices'});
+ for(const path of ['/api/finance?kind=auth.users','/api/finance?kind=accounts&actor=forged']){const bad=backend();expect((await handlePairing(request(path),env,bad)).status).toBe(400);expect(bad.action).not.toHaveBeenCalled()}
+ const forged=backend();expect((await handlePairing(request('/api/finance/collect',{record:{},request_id:'TEST',actor:'forged'}),env,forged)).status).toBe(400);expect(forged.action).not.toHaveBeenCalled();
+ const large=backend();expect((await handlePairing(request('/api/finance/collect',{record:{reason:'x'.repeat(9000)},request_id:'TEST'}),env,large)).status).toBe(400);expect(large.action).not.toHaveBeenCalled();
+});
+it('finance setup and dependency failures are distinct and never return optimistic success',async()=>{
+ const r=await handlePairing(request('/api/finance?kind=accounts'),env,backend({error:'FINANCE_REQUIRED'}));expect(r.status).toBe(503);expect(await r.json()).toEqual({error:'FINANCE_REQUIRED'});
+ const failed=await handlePairing(request('/api/visits/reverse',{record:{},request_id:'TEST'}),env,backend({error:'FINANCE_DEPENDENCY'}));expect(failed.status).toBe(400);expect(await failed.json()).toEqual({error:'FINANCE_DEPENDENCY'});
+});

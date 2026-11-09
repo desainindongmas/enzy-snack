@@ -1,4 +1,4 @@
-# Enzy Snack — Phase 5: kunjungan warung, penjualan dan retur
+# Enzy Snack — Phase 6: keuangan, komisi dan setoran
 
 Scaffold lokal React + TypeScript + Vite + Tailwind 4, komponen Button pola shadcn/ui (Radix/CVA), Supabase anonymous Auth dan PWA. Bahasa Indonesia, layout mobile dengan breakpoint 760px dan target 360px. Palet mengacu logo lampiran; gambar logo asli tidak tersedia sebagai file lokal sehingga ikon sementara dan ilustrasi kemasan CSS digunakan, bukan pengganti aset final.
 
@@ -15,7 +15,7 @@ npm run build
 
 Anonymous sign-in harus diaktifkan pada proyek Supabase. Tidak perlu email/password. Jika env kosong, aplikasi menolak aktivasi dan menampilkan pesan penyiapan; tidak memakai backend/data contoh. Jangan pernah mengisi service-role/secret key ke variabel VITE_. Jangan menerapkan pada database existing sebelum audit RLS lengkap.
 
-Phase 2 menambahkan API Cloudflare Pages Functions dan pairing RPC atomik, status perangkat serta owner issue/list/revoke. Seluruh API fail-closed sampai backend dikonfigurasi. Tidak ada public claim-owner atau data bisnis contoh. Posting stok ditambahkan pada Phase 4; posting finance belum tersedia. Bootstrap owner dan migration tetap manual, bukan bagian build/deploy. Lihat [Setup Phase 2](docs/PHASE-2-SETUP.md).
+Phase 2 menambahkan API Cloudflare Pages Functions dan pairing RPC atomik, status perangkat serta owner issue/list/revoke. Seluruh API fail-closed sampai backend dikonfigurasi. Tidak ada public claim-owner atau data bisnis contoh. Posting stok tersedia sejak Phase 4 dan pencatatan keuangan ditambahkan pada Phase 6. Bootstrap owner dan migration tetap manual, bukan bagian build/deploy. Lihat [Setup Phase 2](docs/PHASE-2-SETUP.md).
 
 ## Dokumen
 
@@ -75,3 +75,13 @@ Verifikasi tambahan: `python tests/postgres-concurrency.py` memakai Docker daemo
 Ikuti [panduan pemasangan dan UAT Phase 5](docs/PHASE-5-SETUP.md): terapkan **satu migration baru** `20261109161548_store_visits_returns.sql` di TEST. Tidak mengulang migration lama/owner atau mengubah env. Penitipan bukan penjualan; kehilangan bukan laku; komisi hanya earned atas laku terverifikasi, belum withheld/paid. Penerimaan uang, setoran dan finance menyusul Phase 6. Pelepasan retur untuk edar ulang/pemusnahan belum dibuka tanpa kebijakan pemilik.
 
 Pengujian concurrency PostgreSQL kini mencakup kunjungan vs transfer, penutupan ganda dan retry kunjungan. Source dokumen bisnis asli tetap privat/tidak dilacak dan tidak tersedia di executor sesi ini; implementasi mengikuti keputusan pengguna dan audit aturan bisnis yang terdokumentasi, bukan mengklaim pembacaan ulang lampiran asli.
+
+## Phase 6 — keuangan dan setoran
+
+Menu **Keuangan** menambahkan rekening kas/bank tanpa saldo awal, penjualan/piutang otomatis dari kunjungan baru, pembayaran sebagian, penguasaan uang petugas/agen, earned/withheld/paid commission, usulan setoran dengan reservasi, penerimaan aktual pemilik, modal/pengeluaran dan pembalikan append-only. Penjualan tidak bertambah lagi saat pembayaran/setoran. Lapangan hanya memegang uang sendiri dan tagihan direct warung yang ditugaskan; produksi tidak memperoleh akses.
+
+Ikuti [setup dan UAT Phase 6](docs/PHASE-6-SETUP.md) untuk satu SQL baru `20261109171410_finance_cash_custody.sql`, tanpa mengulang migration lama atau mengubah env/owner. Kunjungan sebelum pemasangan menunggu tinjauan owner; tidak ada backfill kas atau asumsi semua tagihan lama belum dibayar. Biaya kas keluar bukan HPP; laba final tetap belum dihitung. Saldo awal/cut-off dan backup/restore menunggu Phase 7.
+
+Jurnal seimbang + projection, invoice allocation, reservasi penguasaan, rate, audit dan idempotency diproses atomik pada server dengan lock yang sama lintas inventory/visit/finance. Nilai uang API string integer/UI BigInt. Tes PostgreSQL dua koneksi mencakup overcollection, cash overspend, duplicate receipt, confirmation race dan visit-reversal/payment dependencies.
+
+Logo baru ditampilkan inline oleh pemilik, tetapi belum tersedia sebagai file biner di executor. Integrasi gambar asli masih menunggu lampiran PNG/WebP yang dapat dibaca; wordmark sementara tidak diklaim sebagai artwork asli.

@@ -50,3 +50,14 @@ Hasil list kini terikat pada query/tab yang memuatnya sehingga profil dari tab s
 - Guard kompatibel Phase 4 menutup bypass transfer/reversal dari ledger biasa. Posting memakai lock lintas-RPC, idempotency receipts, audit, role/resource check, no-store dan bounded payload.
 - UI Bahasa Indonesia 360px dengan review sebelum konfirmasi, selector pencarian/paginasi, nominal integer presisi, status/riwayat dan fail-closed migration message tanpa memblokir menu lama.
 - Phase 4 UAT pembelian/stock/reversal/role dilaporkan berhasil oleh pemilik; ini bukti laporan pengguna, bukan pemeriksaan live oleh pengembang. SQL Phase 5 tetap manual TEST; owner/env/secret tidak berubah dan admin kedua tetap ditunda.
+
+## Phase 6
+
+- Accounts/jurnal seimbang/ledger/projection, alokasi pembayaran per visit, partial collection dan pemisahan Enzy cash/field custody/agent custody. Saldo historis tidak diisi otomatis.
+- Earned commission dari verified sold; potongan aktual eksplisit dan pembayaran komisi terpisah dibatasi sisa hak. Tidak menghitung komisi titipan atau otomatis menganggap komisi telah dibayar.
+- Usulan setoran immutable mencadangkan dana; owner mengonfirmasi jumlah aktual, termasuk parsial. Penerimaan memindahkan uang tanpa revenue kedua. Pembatalan sisa usulan melepas cadangan tanpa gerakan kas.
+- Capital in/out dan cash out kategori dengan saldo tercatat tidak negatif; bukan transfer bank, HPP atau laba final. Belum otomatis matching vendor payable/purchase lot.
+- Financial reversal owner-only dan sale hook/visit-reversal hook atomik dengan stock/cycle. Menolak koreksi kunjungan yang masih mempunyai pembayaran/komisi aktif dan pembalikan uang yang sudah dipakai/dicadangkan.
+- Legacy visit recognition hanya setelah owner review penuh sebagai unpaid invoice; migration tidak melakukan backfill uang/saldo. Semua helper/view privat, default-deny RLS/grants, service-only RPC, exact actor/status/scope, idempotency/rate/audit/no-store.
+- UI owner Keuangan dan field Uang & Setoran Saya, ringkasan sebelum konfirmasi, nominal string/BigInt, pemisahan menu/nominal role. SQL lama, secret/env dan owner tidak diubah.
+- Pemilik melaporkan seluruh UAT Phase 5 berhasil. Logo baru inline belum dapat diakses sebagai file; diminta PNG/WebP asli dan tidak diganti generatif. Admin kedua tetap ditunda.

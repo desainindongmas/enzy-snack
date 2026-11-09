@@ -5,7 +5,7 @@ Baca `README.md`, `docs/CONFLICT-REPORT.md`, `docs/MIGRATION-PLAN.md` dan `docs/
 ## Scope
 - Mobile-first PWA Bahasa Indonesia untuk owner, produksi, dan petugas lapangan; satu Supabase PostgreSQL bersama.
 - Tanpa layar login harian; gunakan anonymous Supabase Auth + persetujuan/pairing perangkat. Jangan membuat public owner-claim atau melewatkan autentikasi.
-- Fase sekarang: Phase 5 — penugasan warung, kunjungan/titipan, penjualan terverifikasi, karantina dan pemeriksaan retur, pembalikan atomik. Pelepasan retur untuk edar ulang/pemusnahan menunggu kebijakan pemilik; finance Phase 6. Admin kedua ditunda; instruksi hanya diberikan saat user mengetik "Pasangkan admin kedua". Tidak deploy tanpa instruksi user, tidak sambungkan data bisnis nyata, tidak jalankan SQL draft ke produksi.
+- Fase sekarang: Phase 6 — pembayaran/piutang, penguasaan uang, komisi earned/withheld/paid, usulan/penerimaan setoran, modal/pengeluaran dan jurnal atomik. Pelepasan retur menunggu kebijakan pemilik; backup/restore dan saldo awal Phase 7. Logo asli menunggu file PNG/WebP yang dapat diakses; jangan klaim sudah terpasang tanpa asset. Admin kedua ditunda; instruksi hanya diberikan saat user mengetik "Pasangkan admin kedua". Tidak deploy tanpa instruksi user, tidak sambungkan data bisnis nyata, tidak jalankan SQL draft ke produksi.
 
 ## Data & engine
 - Harga beli supplier per pembelian/lot; biaya kemasan & repacking belum diketahui; jangan mengarang HPP final.
