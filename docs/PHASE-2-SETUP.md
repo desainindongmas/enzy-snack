@@ -1,7 +1,7 @@
 # Phase 2 — aktivasi perangkat dan konfigurasi backend
 
 ## Status
-Implementasi source Phase 2 menggunakan Cloudflare Pages Functions `/api/*` dan RPC PostgreSQL atomik. Ini belum bukti konfigurasi Supabase/Cloudflare live sudah dilakukan. Data bisnis/ledger belum diimplementasikan. Logo asli belum tersedia sebagai file lokal; halaman memakai wordmark teks sementara dan warna krem/teal/kuning/oranye dari acuan. Tidak mengklaim artwork sementara sebagai logo asli.
+Implementasi source Phase 2 menggunakan Cloudflare Pages Functions `/api/*` dan RPC PostgreSQL atomik. Ini belum bukti konfigurasi Supabase/Cloudflare live sudah dilakukan. Data bisnis/ledger belum diimplementasikan. Logo asli kini sudah tersedia dari ZIP pemilik dan dipasang pada header, panel, favicon serta ikon PWA; lihat bagian Logo asli di bawah.
 
 ## Mengaktifkan di lingkungan TEST dahulu
 
@@ -40,7 +40,7 @@ Untuk insiden: set `PAIRING_ENABLED=false`, redeploy; revoke perangkat via admin
 
 ## Logo asli
 
-Letakkan file logo yang dikirim pemilik sebagai `src/assets/enzy-snack-logo.png` (juga mendukung jpg/jpeg/webp dengan basename yang sama). Vite akan membundelnya dan komponen Brand menampilkan artwork di header serta panel desktop. Tidak ada request 404 untuk logo jika file belum diberikan. Jangan mengambil gambar lain dalam workspace sebagai logo. Untuk mengganti favicon/install icon dengan artwork asli, siapkan crop/icon yang disetujui pemilik setelah file tersedia.
+Logo asli dari ZIP pemilik berada di `public/brand/enzy-snack-logo.png`, PNG transparan 1254×1254 tanpa perubahan artwork. Komponen Brand, favicon, Apple touch icon dan manifest PWA memakai file yang sama. Service worker menyimpan gambar untuk tampilan offline, bukan respons API. Setelah deployment Success, refresh atau pilih Perbarui tanpa menghapus data browser. Tidak ada SQL/variabel baru untuk logo.
 
 ## UAT live sebelum dinyatakan siap
 

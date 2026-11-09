@@ -80,3 +80,11 @@ Migration baru saja dibuat/disimulasikan lokal; tidak dijalankan ke Supabase pen
 Logo yang baru dikirim terlihat inline, tetapi tidak mempunyai path/file ID biner yang bisa diakses tool/workspace; pencarian attachment lokal tidak menemukan gambar itu. Pemilik diminta melampirkan PNG/WebP asli. Belum ada penggantian logo dan tidak memakai image generatif/usaha lain sebagai logo asli. Aset/favicons final menunggu file; status logo harus dilaporkan terpisah dari keberhasilan keuangan.
 
 Batas: browser memakai fixture API/Auth dan database memakai auth/role fixture; tidak memverifikasi live JWT/Pages/PostgREST/advisors/backup restore atau melakukan transfer bank. Changelog Supabase HTTP 403, SDK/Auth tidak diubah. Saldo fisik awal/cut-off, penyelesaian biaya/HPP/laba, rekonsiliasi historis dan backup/restore masih diperlukan di Phase 7. Cash out belum auto-matching vendor payable/purchase lot. Tidak mengaktifkan edar ulang retur tanpa kebijakan atau admin kedua, tidak mengubah secrets/env/owner, dan tidak menyatakan siap go-live.
+
+## Pemasangan logo asli setelah ZIP diterima
+
+Status menunggu file pada catatan Phase 6 sebelumnya sudah terselesaikan. ZIP hanya memuat Enzy Snack Logo.png; PNG transparan asli 1254×1254 disalin ke public/brand/enzy-snack-logo.png tanpa penggambaran ulang atau perubahan byte. SHA-256 sumber dan aset yang disajikan build sama: `33676efaa52e2a1340a3ff3b229db3544a2cbfdce49c9ec05c5931f7b05ce900`.
+
+TypeScript/Vite/PWA build lulus. Pemeriksaan Chromium pada preview build produksi lokal memverifikasi gambar berhasil decode dengan naturalWidth 1254, tidak ada wordmark fallback, tidak ada overflow di 360×800 dan 1280×900, hero desktop terlihat, favicon/Apple icon/manifest merujuk PNG yang benar dengan ukuran aktual, serta tidak ada pageerror. Setelah service worker aktif, PNG ada pada cache dan tetap tampil ketika offline/reload; cache tidak memuat /api/*. Screenshot/script pemeriksaan lokal berada di work/ dan tidak dilacak Git.
+
+Tidak menambah tes unit yang meniru perubahan asset atau mengulang tes database karena SQL/Auth/finance tidak diubah. Instalasi ikon pada perangkat fisik dan status deployment Cloudflare tetap perlu dilihat pengguna; pembaruan ikon layar utama mengikuti browser/OS. Tidak perlu SQL, env baru, pairing ulang atau penghapusan data browser.

@@ -61,3 +61,9 @@ Hasil list kini terikat pada query/tab yang memuatnya sehingga profil dari tab s
 - Legacy visit recognition hanya setelah owner review penuh sebagai unpaid invoice; migration tidak melakukan backfill uang/saldo. Semua helper/view privat, default-deny RLS/grants, service-only RPC, exact actor/status/scope, idempotency/rate/audit/no-store.
 - UI owner Keuangan dan field Uang & Setoran Saya, ringkasan sebelum konfirmasi, nominal string/BigInt, pemisahan menu/nominal role. SQL lama, secret/env dan owner tidak diubah.
 - Pemilik melaporkan seluruh UAT Phase 5 berhasil. Logo baru inline belum dapat diakses sebagai file; diminta PNG/WebP asli dan tidak diganti generatif. Admin kedua tetap ditunda.
+
+## Logo asli dari ZIP pemilik
+
+- PNG transparan 1254×1254 disalin tanpa perubahan byte/artwork ke public/brand/enzy-snack-logo.png. Mengganti wordmark sementara di header/panel desktop serta ikon huruf E lama pada favicon/PWA/Apple touch icon.
+- Ukuran header disesuaikan agar badge terbaca di HP/desktop tanpa distorsi atau overflow. Manifest menyatakan ukuran raster asli; tidak mengklaim maskable/crop yang belum dibuat.
+- Gambar asli di-precache untuk offline; API bisnis tetap tidak di-cache. Build dan pemeriksaan browser produksi lokal (HP, desktop, ikon, SHA aset, offline dan no pageerror) lulus. Tidak ada perubahan SQL, keuangan, Auth, env atau data pengguna.

@@ -1,6 +1,6 @@
 # Enzy Snack — Phase 6: keuangan, komisi dan setoran
 
-Scaffold lokal React + TypeScript + Vite + Tailwind 4, komponen Button pola shadcn/ui (Radix/CVA), Supabase anonymous Auth dan PWA. Bahasa Indonesia, layout mobile dengan breakpoint 760px dan target 360px. Palet mengacu logo lampiran; gambar logo asli tidak tersedia sebagai file lokal sehingga ikon sementara dan ilustrasi kemasan CSS digunakan, bukan pengganti aset final.
+Scaffold lokal React + TypeScript + Vite + Tailwind 4, komponen Button pola shadcn/ui (Radix/CVA), Supabase anonymous Auth dan PWA. Bahasa Indonesia, layout mobile dengan breakpoint 760px dan target 360px. Logo asli dari ZIP pemilik dipasang tanpa perubahan artwork pada header, panel besar, favicon dan ikon PWA; palet halaman mengikuti krem/teal/kuning/oranye logo.
 
 ## Jalankan
 
@@ -44,7 +44,7 @@ Konfigurasi static Pages tersedia di `wrangler.toml`, Node 22 di `.node-version`
 
 ## Logo dan deployment Phase 2
 
-Artwork asli belum tersedia sebagai file lokal. Letakkan logo asli sebagai `src/assets/enzy-snack-logo.png` (jpg/jpeg/webp juga didukung), lalu build/push; komponen Brand akan memakainya di header dan panel. Sementara itu palet dan wordmark teks dipakai tanpa mengklaim sebagai logo asli.
+Artwork asli sekarang berada di `public/brand/enzy-snack-logo.png` (1254×1254, PNG transparan), identik byte-per-byte dengan file dalam ZIP pemilik. Brand, favicon, Apple touch icon dan manifest PWA memakai file yang sama. Gambar di-precache service worker untuk tampilan saat offline; API bisnis tetap tidak di-cache. Tidak ada gambar generatif atau penggambaran ulang. Ukuran ikon raster asli dinyatakan sesuai file; sistem perangkat menyesuaikan ukurannya saat instalasi.
 
 Hosting kini memakai Pages Functions `/api/*` selain frontend statis. `SUPABASE_SERVICE_ROLE_KEY` dan `PAIRING_IP_HASH_SECRET` hanya secret runtime Cloudflare, tidak ada di VITE_* atau repo. Panduan Phase 2 menggantikan keterangan Phase 1 tentang stub lokal. Env kosong tetap menolak aktivasi.
 
@@ -84,4 +84,4 @@ Ikuti [setup dan UAT Phase 6](docs/PHASE-6-SETUP.md) untuk satu SQL baru `202611
 
 Jurnal seimbang + projection, invoice allocation, reservasi penguasaan, rate, audit dan idempotency diproses atomik pada server dengan lock yang sama lintas inventory/visit/finance. Nilai uang API string integer/UI BigInt. Tes PostgreSQL dua koneksi mencakup overcollection, cash overspend, duplicate receipt, confirmation race dan visit-reversal/payment dependencies.
 
-Logo baru ditampilkan inline oleh pemilik, tetapi belum tersedia sebagai file biner di executor. Integrasi gambar asli masih menunggu lampiran PNG/WebP yang dapat dibaca; wordmark sementara tidak diklaim sebagai artwork asli.
+Logo inline kemudian dilengkapi ZIP pemilik; artwork asli kini dipasang sebagai asset tanpa perubahan. Wordmark fallback hanya dipakai jika file gambar gagal dimuat.

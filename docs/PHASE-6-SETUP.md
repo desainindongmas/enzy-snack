@@ -126,7 +126,7 @@ Untuk UAT paling sederhana, buat kunjungan baru setelah SQL Phase 6 dipasang dan
 
 ## Logo
 
-Gambar logo terlihat pada percakapan tetapi file biner belum tersedia di executor pengembangan. Logo belum diganti dengan gambar generatif atau gambar usaha lain. Pemilik diminta mengunggah file PNG/WebP asli; slot asset header/halaman sudah tersedia. Jangan mengklaim logo sudah dipasang sampai file asli disimpan, dibangun dan diuji tampil.
+Logo asli sudah diterima dari ZIP pemilik dan dipasang pada header, panel besar, favicon serta ikon PWA. PNG transparan 1254×1254 dipertahankan tanpa perubahan artwork. Setelah deployment Success, refresh atau pilih Perbarui pada pemberitahuan versi baru. Ikon layar utama dapat diperbarui mengikuti browser/sistem perangkat; jangan menghapus data browser karena identitas perangkat tersimpan di sana. Tidak ada SQL/variabel tambahan untuk logo.
 
 ## Catatan teknis dan batas pengujian
 
