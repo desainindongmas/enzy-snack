@@ -2,6 +2,7 @@
 Run only against the managed LOCAL daemon. Never accepts a live database URL.
 """
 import json,os,subprocess,time,uuid
+from datetime import datetime,timezone
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 DOCKER=['env','-u','DOCKER_HOST','-u','DOCKER_CONTEXT','-u','DOCKER_TLS','-u','DOCKER_TLS_VERIFY','-u','DOCKER_CERT_PATH','docker','--host=unix:///var/run/docker.sock']
@@ -74,6 +75,40 @@ try:
  a,b=race(statement('transfer',transfer),statement('reverse',{'operation_id':batch['operation_id'],'reason':'TEST reverse race'},OTHER))
  assert a.get('ok') and b=={'error':'INSUFFICIENT_STOCK'},(a,b)
  print('PASS: distinct action transfer/reversal race serializes and rejects dependent reversal atomically')
+ # Phase 5 uses the same stock lock as Phase 4, across RPC boundaries.
+ def vs(action,record,actor=OWNER,key=None):
+  body=json.dumps({'record':record,'request_id':key or str(uuid.uuid4())})
+  return f"select public.enzy_visit_action({sql_quote(actor)}::uuid,{sql_quote(action)},{sql_quote(IP)},{sql_quote(body)}::jsonb);"
+ def vpost(action,record):return json.loads(q(vs(action,record)))
+ def vbody(store,drops=None,results=None):
+  version=int(q(f"select version from public.enzy_store_state where store_id='{store}';"))
+  rec={'store_id':store,'expected_version':version,'occurred_at':datetime.now(timezone.utc).isoformat(),'reason':'TEST concurrent visit','drops':drops or [],'results':results or []}
+  plan=vpost('preview',rec);assert 'error' not in plan,plan
+  rec['drops']=[{k:d[k] for k in ['lot_id','source_location_id','quantity','price_id']} for d in plan['drops']]
+  return rec
+ def make_store():
+  store=q(f"insert into public.enzy_stores(business_id,name,created_by_device_id) select id,'TEST concurrent store','{device}' from public.enzy_businesses returning id;")
+  assigned=vpost('assign',{'store_id':store,'expected_version':1,'channel':'direct','reason':'TEST concurrent assignment'});assert assigned.get('ok'),assigned
+  q(f"insert into public.enzy_price_agreements(business_id,product_id,store_id,channel,store_price_rp,valid_from,change_reason,created_by_device_id) select id,'{product}','{store}','direct',1500,now()-interval '1 day','TEST concurrency price','{device}' from public.enzy_businesses;")
+  return store
+ store=make_store();batch=make_batch()
+ opening=vbody(store,[{'lot_id':batch['lot_id'],'source_location_id':warehouse,'quantity':20}])
+ transfer.update(lot_id=batch['lot_id'],quantity=40)
+ a,b=race(vs('post',opening),statement('transfer',transfer,OTHER))
+ assert a.get('ok') and b=={'error':'INSUFFICIENT_STOCK'},(a,b)
+ print('PASS: visit and ordinary transfer share stock lock; no cross-RPC overspending')
+ line=q(f"select id from public.enzy_consignment_lines where cycle_id='{a['cycle_id']}';")
+ closing=vbody(store,results=[{'line_id':line,'sold':12,'returned_good':4,'returned_damaged':2,'returned_expired':1,'lost':1}])
+ a,b=race(vs('post',closing),vs('post',closing,OTHER))
+ assert a.get('ok') and b=={'error':'CONFLICT'},(a,b)
+ assert q(f"select count(*) from public.enzy_visit_results where line_id='{line}';")=='1'
+ assert q(f"select gross_sales_rp from public.enzy_visits where operation_id='{a['operation_id']}';")=='18000'
+ print('PASS: simultaneous closing recognizes sold/returns once; stale cycle cannot close twice')
+ store=make_store();batch=make_batch();opening=vbody(store,[{'lot_id':batch['lot_id'],'source_location_id':warehouse,'quantity':20}]);key=str(uuid.uuid4())
+ a,b=race(vs('post',opening,key=key),vs('post',opening,key=key))
+ assert a.get('ok') and b.get('replayed') and a['operation_id']==b['operation_id'],(a,b)
+ assert q(f"select count(*) from public.enzy_visits where store_id='{store}';")=='1'
+ print('PASS: simultaneous visit request replay returns one cycle and one immutable visit')
  bad=q("select count(*) from public.enzy_inventory_balances b left join (select business_id,location_id,lot_id,sum(delta) qty from public.enzy_stock_movements group by business_id,location_id,lot_id) m using(business_id,location_id,lot_id) where b.quantity<>coalesce(m.qty,0) or b.quantity<0;")
  assert bad=='0',bad
  print('PASS: every projection equals ledger sum after races; no negative stock')

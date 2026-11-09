@@ -1,4 +1,4 @@
-# Enzy Snack — Phase 4: pembelian, produksi, dan stok
+# Enzy Snack — Phase 5: kunjungan warung, penjualan dan retur
 
 Scaffold lokal React + TypeScript + Vite + Tailwind 4, komponen Button pola shadcn/ui (Radix/CVA), Supabase anonymous Auth dan PWA. Bahasa Indonesia, layout mobile dengan breakpoint 760px dan target 360px. Palet mengacu logo lampiran; gambar logo asli tidak tersedia sebagai file lokal sehingga ikon sementara dan ilustrasi kemasan CSS digunakan, bukan pengganti aset final.
 
@@ -67,3 +67,11 @@ Menu **Produksi & Stok** menambahkan penerimaan bahan per lot/harga, repacking m
 Ikuti [panduan Phase 4](docs/PHASE-4-SETUP.md) dan jalankan **hanya migration baru** `20261109141211_inventory_lots_batches.sql` di proyek TEST. Env dan owner tidak perlu diubah. Tidak ada seed saldo atau stok awal, penjualan, kunjungan, retur, komisi maupun posting kas. Jika SQL belum dipasang, menu master/perangkat tetap tersedia.
 
 Verifikasi tambahan: `python tests/postgres-concurrency.py` memakai Docker daemon lokal pada `/var/run/docker.sock` dan image PostgreSQL 17 resmi yang dipin digest. Container disposable tanpa jaringan/host port, tidak menerima URL database live; Docker harus tersedia dan image perlu diunduh bila belum ada. Tes ini membuktikan dua koneksi nyata bersaing atas stok/request/pembalikan. Lihat [hasil dan batas verifikasi](docs/VERIFICATION.md).
+
+## Phase 5 — kunjungan dan retur
+
+**Kunjungan & Retur** menambahkan penugasan historis warung, titipan per lot/harga snapshot, penutupan penuh siklus lama, penjualan terverifikasi, pemisahan retur layak/rusak/kedaluwarsa dan kehilangan, pemeriksaan tetap ditahan di karantina, serta pembalikan owner-only. Lapangan hanya memakai muatan sendiri pada warung yang ditugaskan; produksi tidak mendapat akses. Perubahan penugasan menunggu siklus ditutup.
+
+Ikuti [panduan pemasangan dan UAT Phase 5](docs/PHASE-5-SETUP.md): terapkan **satu migration baru** `20261109161548_store_visits_returns.sql` di TEST. Tidak mengulang migration lama/owner atau mengubah env. Penitipan bukan penjualan; kehilangan bukan laku; komisi hanya earned atas laku terverifikasi, belum withheld/paid. Penerimaan uang, setoran dan finance menyusul Phase 6. Pelepasan retur untuk edar ulang/pemusnahan belum dibuka tanpa kebijakan pemilik.
+
+Pengujian concurrency PostgreSQL kini mencakup kunjungan vs transfer, penutupan ganda dan retry kunjungan. Source dokumen bisnis asli tetap privat/tidak dilacak dan tidak tersedia di executor sesi ini; implementasi mengikuti keputusan pengguna dan audit aturan bisnis yang terdokumentasi, bukan mengklaim pembacaan ulang lampiran asli.

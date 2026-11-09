@@ -40,3 +40,13 @@ Hasil list kini terikat pada query/tab yang memuatnya sehingga profil dari tab s
 - RPC atomik/idempotent service-only, schema helper privat, status/role check, scope lapangan dan cost redaction, persisted throttle, serialized posting + row locks.
 - Menu produksi/stok mobile, selector pencarian/paginasi, ringkasan sebelum posting, receipt dari server dan query-key isolation. Data usaha/perangkat tetap tersedia bila migration baru belum diterapkan.
 - 125 tes lokal, 11 tes browser dan pengujian concurrency dua koneksi PostgreSQL 17 lulus; build dan Functions compile lulus. Tidak mengubah database live, env/credential atau owner. Panduan manual/UAT TEST ditambahkan; admin kedua tetap ditunda.
+
+## Phase 5
+
+- Penugasan historis owner/field serta channel direct/agent; satu siklus titipan per warung dengan optimistic version. Field kehilangan akses saat dialihkan, produksi tidak dapat membuka data kunjungan.
+- Titipan multi-lot dari stok siap jual, harga server-as-of dengan agent store override/fallback, quote ID diverifikasi saat posting. Snapshot harga lama tidak dihitung ulang saat kunjungan berikutnya.
+- Penutupan semua titipan lama dengan rincian explicit sold/retur layak/rusak/kedaluwarsa/lost. Kehilangan tidak menjadi penjualan; semua retur masuk karantina. Hasil penjualan/bagian Enzy/earned commission dihitung tanpa cash/remittance atau potongan otomatis.
+- Owner inspection mencatat bukti dan tetap hold; tidak membuka resale/disposal tanpa kebijakan. Pembalikan kunjungan atomik memulihkan cycle, ledger/projection dan membatalkan hasil; evidence tetap immutable dan bertanda void saat parent visit dibalikkan.
+- Guard kompatibel Phase 4 menutup bypass transfer/reversal dari ledger biasa. Posting memakai lock lintas-RPC, idempotency receipts, audit, role/resource check, no-store dan bounded payload.
+- UI Bahasa Indonesia 360px dengan review sebelum konfirmasi, selector pencarian/paginasi, nominal integer presisi, status/riwayat dan fail-closed migration message tanpa memblokir menu lama.
+- Phase 4 UAT pembelian/stock/reversal/role dilaporkan berhasil oleh pemilik; ini bukti laporan pengguna, bukan pemeriksaan live oleh pengembang. SQL Phase 5 tetap manual TEST; owner/env/secret tidak berubah dan admin kedua tetap ditunda.

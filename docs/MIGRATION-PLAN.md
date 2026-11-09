@@ -31,3 +31,9 @@ Migration `20261109130426_master_data_pricing.sql` menambahkan konfigurasi satu 
 Migration `20261109141211_inventory_lots_batches.sql` setelah Phase 3 menambah lokasi, operasi immutable, pembelian, batch/input, lot, saldo projection, ledger, audit dan idempotency receipt. RPC service-only baru memakai helper di schema privat, active device/role check, persisted rate limits, business-wide transaction advisory lock dan bucket `FOR UPDATE`. Penggunaan raw gram dan finished pcs dipisahkan; biaya nullable tetap incomplete.
 
 Hanya konfigurasi raw/finished/quarantine dibuat tanpa kuantitas. Tidak mengubah migration lama, owner, harga, atau data pengguna. Jalankan file baru secara manual di TEST sesuai PHASE-4-SETUP.md. Pengembang hanya menguji database disposable; tidak melakukan remote migration. Rollback bisnis memakai reversal beralasan, bukan menghapus ledger/tabel. Stok awal/legacy membutuhkan cut-off dan rencana rekonsiliasi tersendiri, bukan pembelian fiktif.
+
+## Implementasi Phase 5
+
+Migration `20261109161548_store_visits_returns.sql` memperluas lokasi dengan store_consignment dan operasi dengan visit; menambahkan assignment append-only, visit headers, cycle/lines, hasil per lot, inspections, store state/version dan request receipt. Public service-only visit RPC memakai helper privat dan lock inventory yang sama dengan Phase 4. Default created_at operasi baru memakai clock_timestamp untuk urutan posting sebenarnya, termasuk pada transaksi multi-aksi; waktu historis tidak ditimpa.
+
+RPC inventory Phase 4 dipertahankan melalui wrapper kompatibel yang mendelegasikan ke implementasi privat; transfer ke/dari store_consignment dan pembalikan generik visit diblokir. SQL Phase 4 yang sudah diterapkan tidak diubah. Tidak ada seed/store assignment/stock/business fixture, remote migration atau perubahan owner. Return inspection hanya mengonfirmasi hold; edar ulang/pemusnahan menunggu keputusan. Panduan dan UAT: PHASE-5-SETUP.md.

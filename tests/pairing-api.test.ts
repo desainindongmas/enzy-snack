@@ -87,3 +87,14 @@ it('inventory migration missing has a distinct setup message; stock errors never
  expect(await r.json()).toEqual({error:'INVENTORY_REQUIRED'});
  const stock=await handlePairing(request('/api/inventory/transfer',{record:{},request_id:'fixture'}),env,backend({error:'INSUFFICIENT_STOCK'}));expect(stock.status).toBe(400);expect(await stock.json()).toEqual({error:'INSUFFICIENT_STOCK'});
 });
+it('visit routes bind server-verified actor and restrict query/body envelope',async()=>{
+ const b=backend({records:[],count:0,page:1});expect((await handlePairing(request('/api/visits?kind=stores'),env,b)).status).toBe(200);expect(b.action).toHaveBeenCalledWith('verified-user','visit_list',expect.any(String),{kind:'stores'});
+ const preview=backend();expect((await handlePairing(request('/api/visits/preview',{record:{store_id:'TEST'}}),env,preview)).status).toBe(200);expect(preview.action).toHaveBeenCalledWith('verified-user','visit_preview',expect.any(String),{record:{store_id:'TEST'}});
+ for(const path of ['/api/visits?kind=auth.users','/api/visits?kind=stores&actor=forged']){const bad=backend();expect((await handlePairing(request(path),env,bad)).status).toBe(400);expect(bad.action).not.toHaveBeenCalled()}
+ const forged=backend();expect((await handlePairing(request('/api/visits/post',{record:{},request_id:'TEST',actor:'forged'}),env,forged)).status).toBe(400);expect(forged.action).not.toHaveBeenCalled();
+});
+it('visit setup and reconciliation errors fail closed and oversized body never reaches backend',async()=>{
+ const setup=await handlePairing(request('/api/visits?kind=stores'),env,backend({error:'VISITS_REQUIRED'}));expect(setup.status).toBe(503);expect(await setup.json()).toEqual({error:'VISITS_REQUIRED'});
+ const failed=await handlePairing(request('/api/visits/post',{record:{},request_id:'TEST'}),env,backend({error:'VISIT_RECONCILIATION'}));expect(failed.status).toBe(400);expect(await failed.json()).toEqual({error:'VISIT_RECONCILIATION'});
+ const b=backend();expect((await handlePairing(request('/api/visits/post',{record:{reason:'x'.repeat(26000)},request_id:'TEST'}),env,b)).status).toBe(400);expect(b.action).not.toHaveBeenCalled();
+});
