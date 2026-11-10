@@ -97,3 +97,5 @@ Ikuti [setup Phase 7](docs/PHASE-7-SETUP.md) untuk satu migration baru `20261109
 `node scripts/backup-crypto.mjs encrypt|decrypt INPUT OUTPUT` mengenkripsi backup lokal dengan password terminal tersembunyi, AES-GCM dan output privat tanpa overwrite. `python tests/postgres-backup-restore.py` membuktikan dump→enkripsi→restore fixture PostgreSQL 17 ke database terpisah dan memeriksa data/ACL/RLS/rekonsiliasi/retry. Tidak menerima target remote atau melakukan backup proyek pengguna. Lihat [panduan admin backup/restore](docs/BACKUP-RESTORE.md) untuk cakupan managed Auth/Storage, off-site dan batas proof lokal.
 
 Pembaruan tampilan: navigasi bawah mobile, sidebar desktop, Lainnya dan nama sapaan tersimpan di database. Panduan aktivasi SQL tambahan dan penggunaan ada di [MOBILE-APP-SETUP.md](docs/MOBILE-APP-SETUP.md). Tidak memerlukan pairing ulang atau variabel baru.
+
+Sesi latihan tim: [panduan mulai dari kosong dan batas reset admin](docs/TRAINING-SESSION.md). Reset khusus TEST hanya dijalankan atas permintaan eksplisit pemilik; template tidak pernah dipanggil build/frontend.
