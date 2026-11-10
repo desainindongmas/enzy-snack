@@ -75,3 +75,9 @@ Hasil list kini terikat pada query/tab yang memuatnya sehingga profil dari tab s
 - Opening stok/uang satu kali hanya pada database fresh; biaya belum diketahui tetap incomplete, nol perlu konfirmasi, periode/kewajiban lama perlu rekonsiliasi. Stok/uang serta ledger/audit/receipt diposting atomik tanpa omzet/komisi/modal baru. Reversal separuh opening diblokir.
 - Utilitas backup-crypto lokal AES-GCM/PBKDF2 dengan password tersembunyi, file 0600, authenticated header, no overwrite/partial output. Rehearsal pg_dump terenkripsi/pg_restore ke target PostgreSQL disposable memverifikasi seluruh row/grants/RLS, opening, retry dan partial remittance.
 - Menu dan panduan Bahasa Indonesia, SQL audit read-only, workflow backup aktual/produksi/cut-off dan batas managed Auth/Storage. Tidak ada remote backup/restore, proyek produksi dibuat, saldo nyata ditetapkan, secret/owner diubah atau admin kedua dipasang.
+
+## Tampilan mobile dan nama sapaan — 10 November 2026
+
+Navigasi sesuai peran dengan Beranda, menu bawah pada HP, sidebar pada komputer, dan Lainnya. Modul ditampilkan satu per satu; tab membungkus ke beberapa baris; perpindahan dari editor memerlukan konfirmasi agar isian tidak hilang tanpa sengaja. Logo asli dipertahankan. Beranda pemilik menggunakan agregat server seluruh periode, tanpa laba/nominal buatan.
+
+Nama sapaan terpisah dari label perangkat; pemilik memberi nama saat membuat undangan, mengubah nama sendiri dan karyawan aktif. Migrasi tambahan nullable mempertahankan identitas/pairing lama. Nama ikut ditebus atomik dengan undangan, perubahan diaudit, akses employee/pending/revoked/owner lain ditolak. RPC capability baru mencegah aplikasi lama mengabaikan nama pada database yang belum diperbarui. Tidak ada perubahan secret atau data transaksi. Panduan `MOBILE-APP-SETUP.md`; backup aktual dan go-live tetap menunggu langkah manual.

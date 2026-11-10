@@ -32,3 +32,10 @@ export async function fixture(page:Page,role='owner'){
  });
  return records;
 }
+
+export async function navigate(page:Page,label:string){
+ const discard=async()=>{if(await page.getByRole('dialog').isVisible())await page.getByRole('button',{name:'Tinggalkan isian',exact:true}).click()};
+ const button=page.getByRole('button',{name:label,exact:true});
+ if(!await button.isVisible()){await page.getByRole('button',{name:'Lainnya',exact:true}).click();await discard()}
+ await button.click();await discard();
+}

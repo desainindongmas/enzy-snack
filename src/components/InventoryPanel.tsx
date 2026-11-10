@@ -84,8 +84,8 @@ function StockCard({row,kind,owner,onReverse}:{row:InventoryRow;kind:InventoryKi
  {row.reversed&&<span className="record-status">Sudah dibalikkan</span>}
  </div>{owner&&kind==='operations'&&row.kind!=='reversal'&&row.kind!=='visit'&&row.kind!=='opening'&&!row.reversed&&<button className="text-button danger" onClick={()=>onReverse(row)}>Balikkan catatan</button>}</li>;
 }
-export default function InventoryPanel({role,onAccessError}:{role:Role;onAccessError:()=>void}){
- const tabs=inventoryKinds(role),[kind,setKind]=useState<InventoryKind>('balances'),[q,setQ]=useState(''),[page,setPage]=useState(1),[reload,setReload]=useState(0),[editor,setEditor]=useState<{action:InventoryAction;target?:InventoryRow}|null>(null),[receipt,setReceipt]=useState<InventoryReceipt|null>(null);
+export default function InventoryPanel({role,onAccessError,initialKind='balances'}:{role:Role;onAccessError:()=>void;initialKind?:InventoryKind}){
+ const tabs=inventoryKinds(role),[kind,setKind]=useState<InventoryKind>(initialKind),[q,setQ]=useState(''),[page,setPage]=useState(1),[reload,setReload]=useState(0),[editor,setEditor]=useState<{action:InventoryAction;target?:InventoryRow}|null>(null),[receipt,setReceipt]=useState<InventoryReceipt|null>(null);
  const data=useList(kind,q,page,{},reload);
  function start(action:InventoryAction,target?:InventoryRow){setReceipt(null);setEditor({action,target})}
  function done(r:InventoryReceipt){setReceipt(r);setEditor(null);setKind(kind==='operations'?'operations':'balances');setPage(1);setQ('');setReload(n=>n+1)}

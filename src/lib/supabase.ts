@@ -22,10 +22,11 @@ export function initializeSession():Promise<string>{
  })().catch(e=>{initialization=null;throw e});return initialization;
 }
 export type Role='owner'|'production'|'field';
-export interface Device {id:string|null;device_label:string|null;status:'pending'|'active'|'revoked';role:Role|null}
+export interface Device {id:string|null;device_label:string|null;display_name?:string|null;status:'pending'|'active'|'revoked';role:Role|null}
 export interface ManagedDevice extends Device {id:string;paired_at:string|null;revoked_at:string|null}
 export interface Invitation {code:string;expires_at:string}
 const messages:Record<string,string>={
+ PROFILE_REQUIRED:'Nama sapaan belum siap. Pemilik perlu menjalankan SQL pembaruan nama perangkat di Supabase.',
  SETUP_REQUIRED:'Aktivasi belum siap. Pemilik perlu menyelesaikan penyiapan backend.',
  BACKEND_UNAVAILABLE:'Layanan belum dapat dihubungi. Coba lagi beberapa saat.',
  UNAUTHORIZED:'Sesi perangkat tidak valid. Muat ulang halaman untuk mencoba kembali.',
@@ -78,6 +79,8 @@ export async function getDevice():Promise<Device>{
  return device;
 }
 export const redeemPairing=(code:string)=>api<{ok:true}>('pairing/redeem',{code});
-export const issuePairing=(role:'production'|'field',device_label:string)=>api<Invitation>('pairing/issue',{role,device_label});
+export const issuePairing=(role:'production'|'field',device_label:string,display_name?:string)=>api<Invitation>('pairing/issue',{role,device_label,...(display_name===undefined?{}:{display_name})});
 export const listDevices=()=>api<{devices:ManagedDevice[]}>('devices');
 export const revokeDevice=(device_id:string)=>api<{ok:true}>('devices/revoke',{device_id});
+
+export const updateDeviceName=(device_id:string,display_name:string)=>api<{ok:true}>('devices/profile',{device_id,display_name});

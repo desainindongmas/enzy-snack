@@ -19,6 +19,7 @@ function json(data:unknown,status=200){return new Response(JSON.stringify(data),
 const routes:Record<string,{method:string;action:string}>={
  '/api/device':{method:'GET',action:'status'},'/api/devices':{method:'GET',action:'list'},
  '/api/pairing/issue':{method:'POST',action:'issue'},'/api/pairing/redeem':{method:'POST',action:'redeem'},
+ '/api/devices/profile':{method:'POST',action:'profile'},
  '/api/devices/revoke':{method:'POST',action:'revoke'},
  '/api/master':{method:'GET',action:'master_list'},
  '/api/master/save':{method:'POST',action:'master_save'},
@@ -84,15 +85,16 @@ export async function handlePairing(request:Request,env:PairingEnv,backend?:Back
   const service:Backend=backend??{
    async verify(token){const {data,error}=await client!.auth.getUser(token);return !error&&data.user?data.user.id:null},
    async action(actor,action,ipHash,body){
+    const profile=action==='profile'||(action==='issue'&&body.display_name!==undefined);
     const master=action.startsWith('master_'),inventory=action.startsWith('inventory_'),visit=action.startsWith('visit_'),finance=action.startsWith('finance_'),readiness=action.startsWith('readiness_');
-    const {data,error}=await client!.rpc(readiness?'enzy_readiness_action':finance?'enzy_finance_action':visit?'enzy_visit_action':inventory?'enzy_inventory_action':master?'enzy_master_action':'enzy_pairing_action',readiness?
+    const {data,error}=await client!.rpc(profile?'enzy_profile_action':readiness?'enzy_readiness_action':finance?'enzy_finance_action':visit?'enzy_visit_action':inventory?'enzy_inventory_action':master?'enzy_master_action':'enzy_pairing_action',readiness?
      {p_actor:actor,p_action:action.slice(10),p_ip_hash:ipHash,p_payload:body}:finance?
      {p_actor:actor,p_action:action.slice(8),p_ip_hash:ipHash,p_payload:body}:visit?
      {p_actor:actor,p_action:action.slice(6),p_ip_hash:ipHash,p_payload:body}:inventory?
      {p_actor:actor,p_action:action.slice(10),p_ip_hash:ipHash,p_payload:body}:master?
      {p_actor:actor,p_action:action.slice(7),p_kind:body.kind,p_ip_hash:ipHash,p_payload:body}:
      {p_actor:actor,p_action:action,p_ip_hash:ipHash,p_payload:body});
-    if((master||inventory||visit||finance||readiness)&&error&&['42883','42P01','PGRST202'].includes(error.code))return {error:readiness?'READINESS_REQUIRED':finance?'FINANCE_REQUIRED':visit?'VISITS_REQUIRED':inventory?'INVENTORY_REQUIRED':'MIGRATION_REQUIRED'};
+    if((profile||master||inventory||visit||finance||readiness)&&error&&['42883','42P01','PGRST202'].includes(error.code))return {error:profile?'PROFILE_REQUIRED':readiness?'READINESS_REQUIRED':finance?'FINANCE_REQUIRED':visit?'VISITS_REQUIRED':inventory?'INVENTORY_REQUIRED':'MIGRATION_REQUIRED'};
     return error?null:data;
    },
   };
@@ -129,19 +131,23 @@ export async function handlePairing(request:Request,env:PairingEnv,backend?:Back
     Object.keys(payload).some(k=>!(route.action==='master_list'?['kind','search','page','include_archived']:['kind','record','request_id']).includes(k)))return json({error:'INVALID_REQUEST'},400);
    if(route.action!=='master_list'&&(!payload.record||typeof payload.record!=='object'||Array.isArray(payload.record)||typeof payload.request_id!=='string'))return json({error:'INVALID_REQUEST'},400);
   }else if(route.action==='issue'){
-   if(Object.keys(payload).some(k=>!['role','device_label'].includes(k))||!['production','field'].includes(String(payload.role))||typeof payload.device_label!=='string'||!payload.device_label.trim()||payload.device_label.trim().length>100)return json({error:'INVALID_REQUEST'},400);
-   code=newPairingCode();payload={role:payload.role,device_label:payload.device_label.trim(),code_hash:await digest(code)};
+   if(Object.keys(payload).some(k=>!['role','device_label','display_name'].includes(k))||!['production','field'].includes(String(payload.role))||typeof payload.device_label!=='string'||!payload.device_label.trim()||payload.device_label.trim().length>100)return json({error:'INVALID_REQUEST'},400);
+   if(payload.display_name!==undefined&&(typeof payload.display_name!=='string'||!payload.display_name.trim()||payload.display_name.trim().length>80||/[\x00-\x1f\x7f]/.test(payload.display_name)))return json({error:'INVALID_REQUEST'},400);
+   code=newPairingCode();payload={role:payload.role,device_label:payload.device_label.trim(),...(payload.display_name===undefined?{}:{display_name:(payload.display_name as string).trim()}),code_hash:await digest(code)};
   }else if(route.action==='redeem'){
    // Even malformed code attempts go to RPC rate limits; never send/store plaintext there.
    const valid=Object.keys(payload).length===1&&typeof payload.code==='string'&&/^[0-9a-fA-F]{64}$/.test(payload.code);
    payload={code_hash:valid?await digest((payload.code as string).toLowerCase()):''};
+  }else if(route.action==='profile'){
+   if(Object.keys(payload).length!==2||typeof payload.device_id!=='string'||typeof payload.display_name!=='string'||!payload.display_name.trim()||payload.display_name.trim().length>80||/[\x00-\x1f\x7f]/.test(payload.display_name))return json({error:'INVALID_REQUEST'},400);
+   payload={device_id:payload.device_id,display_name:payload.display_name.trim()};
   }else if(route.action==='revoke'){
    if(Object.keys(payload).length!==1||typeof payload.device_id!=='string')return json({error:'INVALID_REQUEST'},400);
    payload={device_id:payload.device_id};
   }
   const result=await service.action(actor,route.action,await hashIp(ip,env.PAIRING_IP_HASH_SECRET),payload);
   if(!result)return json({error:'BACKEND_UNAVAILABLE'},503);
-  if(result.error){const status=['MIGRATION_REQUIRED','INVENTORY_REQUIRED','VISITS_REQUIRED','FINANCE_REQUIRED','READINESS_REQUIRED'].includes(String(result.error))?503:result.error==='CONFLICT'?409:result.error==='RATE_LIMITED'?429:['FORBIDDEN','DEVICE_REVOKED'].includes(String(result.error))?403:result.error==='UNAUTHORIZED'?401:400;return json({error:result.error},status)}
+  if(result.error){const status=['PROFILE_REQUIRED','MIGRATION_REQUIRED','INVENTORY_REQUIRED','VISITS_REQUIRED','FINANCE_REQUIRED','READINESS_REQUIRED'].includes(String(result.error))?503:result.error==='CONFLICT'?409:result.error==='RATE_LIMITED'?429:['FORBIDDEN','DEVICE_REVOKED'].includes(String(result.error))?403:result.error==='UNAUTHORIZED'?401:400;return json({error:result.error},status)}
   return json(code?{...result,code}:result);
  }catch{return json({error:'BACKEND_UNAVAILABLE'},503)}
 }

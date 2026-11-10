@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
-import {fixture} from './fixtures';
+import {fixture,navigate} from './fixtures';
 test('owner manages product and archives it at 360px without horizontal scroll',async({page})=>{
- await fixture(page);await page.goto('/');await expect(page.getByRole('heading',{name:'Selamat datang, Pemilik'})).toBeVisible();
+ await fixture(page);await page.goto('/');await navigate(page,'Data usaha');
  await page.getByRole('button',{name:'Tambah produk',exact:true}).click();
  await page.getByLabel('Nama produk',{exact:true}).fill('TEST Keripik');await page.getByLabel('Kode produk / SKU').fill('TEST-20');await page.getByLabel('Berat nominal per bungkus (gram)').fill('20');
  await page.getByRole('button',{name:'Simpan data',exact:true}).click();await expect(page.getByRole('heading',{name:'TEST Keripik',exact:true})).toBeVisible();
@@ -15,7 +15,7 @@ test('owner manages product and archives it at 360px without horizontal scroll',
 test('owner configures agent price and store override with searchable selectors',async({page})=>{
  const records=await fixture(page);
  records.products.push({id:crypto.randomUUID(),name:'TEST Product',sku_code:'TEST-20',is_active:true,version:1});records.stores.push({id:crypto.randomUUID(),name:'TEST Store',is_active:true,version:1});records.agents.push({id:crypto.randomUUID(),name:'TEST Agent',is_active:true,version:1});
- await page.goto('/');await page.getByRole('button',{name:'Harga & Riwayat',exact:true}).click();await page.getByRole('button',{name:'Tambah harga',exact:true}).click();
+ await page.goto('/');await navigate(page,'Data usaha');await page.getByRole('button',{name:'Harga & Riwayat',exact:true}).click();await page.getByRole('button',{name:'Tambah harga',exact:true}).click();
  await page.getByLabel('Produk',{exact:true}).selectOption(records.products[0].id);
  await page.getByLabel('Jalur penjualan').selectOption('agent');await page.getByLabel('Agen',{exact:true}).selectOption(records.agents[0].id);
  await page.getByLabel('Harga khusus untuk warung tertentu').check();await page.getByLabel('Cari Warung',{exact:true}).fill('TEST');
@@ -27,13 +27,13 @@ test('owner configures agent price and store override with searchable selectors'
  expect(records.prices[0].store_id).toBe(records.stores[0].id);
 });
 test('production has no owner data controls and offline hides owner workspace',async({page,context})=>{
- await fixture(page,'production');await page.goto('/');await expect(page.getByRole('heading',{name:'Selamat datang, Produksi'})).toBeVisible();
+ await fixture(page,'production');await page.goto('/');await expect(page.getByRole('heading',{name:'Halo, Produksi.'})).toBeVisible();
  await expect(page.getByRole('button',{name:'Data usaha',exact:true})).toHaveCount(0);
- await context.setOffline(true);await expect(page.getByRole('heading',{name:'Selamat datang, Produksi'})).toHaveCount(0);await expect(page.getByText(/Kamu sedang offline/)).toBeVisible();
+ await context.setOffline(true);await expect(page.getByRole('heading',{name:'Halo, Produksi.'})).toHaveCount(0);await expect(page.getByText(/Kamu sedang offline/)).toBeVisible();
 });
 test('missing Phase 3 migration keeps device management accessible',async({page})=>{
  await fixture(page);await page.route('**/api/master?**',route=>route.fulfill({status:503,json:{error:'MIGRATION_REQUIRED'}}));
- await page.goto('/');await expect(page.getByText(/Jalankan SQL Phase 3/)).toBeVisible();await page.getByRole('button',{name:'Perangkat tim',exact:true}).click();await expect(page.getByRole('button',{name:'Buat kode pairing',exact:true})).toBeVisible();
+ await page.goto('/');await navigate(page,'Data usaha');await expect(page.getByText(/Jalankan SQL Phase 3/)).toBeVisible();await navigate(page,'Perangkat tim');await expect(page.getByRole('button',{name:'Buat kode pairing',exact:true})).toBeVisible();
 });
 for(const source of ['Produk','Warung','Agen'])test(`opens price history after populated ${source} without crashing`,async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
@@ -43,7 +43,7 @@ for(const source of ['Produk','Warung','Agen'])test(`opens price history after p
  const agent={id:crypto.randomUUID(),name:'TEST source agent',is_active:true,version:1};
  records.products.push(product);records.stores.push(store);records.agents.push(agent);
  records.prices.push({id:crypto.randomUUID(),product_id:product.id,store_id:store.id,channel:'direct',store_price_rp:1500,valid_from:new Date().toISOString(),valid_to:null,change_reason:'TEST existing history'});
- await page.goto('/');await expect(page.getByRole('heading',{name:product.name,exact:true})).toBeVisible();
+ await page.goto('/');await navigate(page,'Data usaha');await expect(page.getByRole('heading',{name:product.name,exact:true})).toBeVisible();
  if(source!=='Produk'){
   await page.getByRole('button',{name:source,exact:true}).click();
   await expect(page.getByRole('heading',{name:source==='Warung'?store.name:agent.name,exact:true})).toBeVisible();

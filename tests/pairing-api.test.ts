@@ -119,3 +119,13 @@ it('readiness setup/errors fail closed and bodies above 32 KB never reach backen
  const locked=await handlePairing(request('/api/readiness/opening-post',{record:{},request_id:'TEST'}),env,backend({error:'OPENING_NOT_FRESH'}));expect(locked.status).toBe(400);expect(await locked.json()).toEqual({error:'OPENING_NOT_FRESH'});
  const b=backend();expect((await handlePairing(request('/api/readiness/evidence',{record:{note:'x'.repeat(33000)},request_id:'TEST'}),env,b)).status).toBe(400);expect(b.action).not.toHaveBeenCalled();
 });
+it('named pairing forwards trimmed greeting with verified actor and code hash',async()=>{
+ const b=backend({ok:true,expires_at:'2030-01-01T00:00:00Z'});const r=await handlePairing(request('/api/pairing/issue',{role:'field',device_label:'TEST HP',display_name:'  TEST Ani  '}),env,b);expect(r.status).toBe(200);expect(b.action).toHaveBeenCalledWith('verified-user','issue',expect.any(String),expect.objectContaining({display_name:'TEST Ani',device_label:'TEST HP'}));
+});
+it('profile updates accept names only, reject forged access and invalid names',async()=>{
+ const b=backend();expect((await handlePairing(request('/api/devices/profile',{device_id:'test-id',display_name:'  TEST Ani  '}),env,b)).status).toBe(200);expect(b.action).toHaveBeenCalledWith('verified-user','profile',expect.any(String),{device_id:'test-id',display_name:'TEST Ani'});
+ for(const payload of [{device_id:'test-id',display_name:'TEST',role:'owner'},{device_id:'test-id',display_name:''},{device_id:'test-id',display_name:'bad\nname'},{device_id:'test-id',display_name:'x'.repeat(81)}])expect((await handlePairing(request('/api/devices/profile',payload),env,b)).status).toBe(400);
+});
+it('missing profile migration returns an actionable 503 and no invitation code',async()=>{
+ const r=await handlePairing(request('/api/pairing/issue',{role:'production',device_label:'TEST',display_name:'TEST'}),env,backend({error:'PROFILE_REQUIRED'}));expect(r.status).toBe(503);expect(await r.json()).toEqual({error:'PROFILE_REQUIRED'});
+});

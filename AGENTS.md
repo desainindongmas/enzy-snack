@@ -25,3 +25,7 @@ Baca `README.md`, `docs/CONFLICT-REPORT.md`, `docs/MIGRATION-PLAN.md` dan `docs/
 - Laporkan fase yang dikerjakan, tes dijalankan beserta hasil, file berubah, TODO/blockers.
 - Jangan klaim selesai/aman sebelum implementasi + tes nyata. Jangan gunakan nominal ilustrasi sebagai transaksi produksi.
 - Berhenti jika diperlukan keputusan bisnis yang masih terbuka; desain schema harus mendukung konfigurasi, bukan asumsi palsu.
+
+## Pembaruan tampilan setelah Phase 7
+- Shell mobile memakai bottom menu sesuai peran; desktop memakai sidebar. Data usaha/Perangkat tim/Kesiapan usaha ada di Lainnya. Jangan mengembalikan modul karyawan yang ditumpuk dalam satu halaman.
+- Nama sapaan nullable terpisah dari device_label; migrasi `20261110043537_device_display_names.sql`, panduan `docs/MOBILE-APP-SETUP.md`. Nama diberikan saat undangan dan dapat diubah pemilik untuk diri sendiri/karyawan aktif; tidak mengubah peran dan tidak pairing ulang. Gunakan capability RPC baru untuk named issue, jangan diam-diam mengabaikan nama pada database lama.

@@ -1,3 +1,4 @@
+import {navigate} from './fixtures';
 import {test,expect,type Page} from '@playwright/test';
 import {fixture} from './fixtures';
 async function stockFixture(page:Page,role='owner'){
@@ -54,9 +55,9 @@ test('insufficient transfer keeps review and does not claim success or alter loc
 });
 test('production sees operational batches without costs or owner posting controls',async({page})=>{
  const state=await stockFixture(page,'production');state.batches.push({id:crypto.randomUUID(),product_name:'TEST batch restricted',good_pcs:45,known_cost_rp:9999,unit_cost_rp:222,cost_status:'COST_INCOMPLETE'});
- await page.goto('/');await expect(page.getByRole('heading',{name:'Selamat datang, Produksi'})).toBeVisible();await page.getByRole('button',{name:'Produksi',exact:true}).click();await expect(page.getByRole('heading',{name:'TEST batch restricted'})).toBeVisible();
+ await page.goto('/');await expect(page.getByRole('heading',{name:'Halo, Produksi.'})).toBeVisible();await page.getByRole('button',{name:'Produksi',exact:true}).click();await expect(page.getByRole('heading',{name:'TEST batch restricted'})).toBeVisible();
  await expect(page.getByText(/Subtotal biaya diketahui/)).toHaveCount(0);await expect(page.getByText(/Biaya per pcs/)).toHaveCount(0);for(const label of ['Terima bahan','Transfer stok','Tambah lokasi','Koreksi'])await expect(page.getByRole('button',{name:label,exact:true})).toHaveCount(0);
 });
 test('missing Phase 4 migration leaves master data and devices available',async({page})=>{
- await stockFixture(page);await page.route('**/api/inventory**',route=>route.fulfill({status:503,json:{error:'INVENTORY_REQUIRED'}}));await page.goto('/');await page.getByRole('button',{name:'Produksi & Stok',exact:true}).click();await expect(page.getByText(/Jalankan SQL Phase 4/)).toBeVisible();await page.getByRole('button',{name:'Perangkat tim',exact:true}).click();await expect(page.getByRole('button',{name:'Buat kode pairing',exact:true})).toBeVisible();
+ await stockFixture(page);await page.route('**/api/inventory**',route=>route.fulfill({status:503,json:{error:'INVENTORY_REQUIRED'}}));await page.goto('/');await page.getByRole('button',{name:'Produksi & Stok',exact:true}).click();await expect(page.getByText(/Jalankan SQL Phase 4/)).toBeVisible();await navigate(page,'Perangkat tim');await expect(page.getByRole('button',{name:'Buat kode pairing',exact:true})).toBeVisible();
 });
