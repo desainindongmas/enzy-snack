@@ -118,3 +118,7 @@ Dokumentasi backup resmi Supabase diperiksa melalui source GitHub. CLI db dump h
 - Tidak mengulang UAT bisnis yang sudah lulus. Tidak ada perubahan UI, API, migration, secret atau hak klien.
 - Koneksi Supabase kini tersedia. Target diverifikasi melalui daftar proyek dan inventaris aktual: Enzy Snack Test. Setelah uji fixture lulus, reset satu kali yang secara eksplisit diminta pemilik dijalankan lewat koneksi admin; receipt audit, pemeriksaan readiness/freshness dan query read-only terpisah mengonfirmasi seluruh data bisnis kosong, hanya konfigurasi sistem tanpa saldo tersisa, identitas/perangkat dipertahankan.
 - Backup/enkripsi/restore PostgreSQL lokal dilaporkan berhasil oleh pemilik melalui terminal. Ini bukan klaim pemulihan provider Supabase/Storage. Data riil dan saldo historis belum dipindahkan; tujuan saat ini sesi latihan bersama tim.
+
+## Panduan owner kedua — 10 November 2026
+
+Template admin dan panduan Markdown disiapkan atas permintaan pemilik. Lima tes PostgreSQL WASM terarah: owner kedua aktif/status resolver dan owner pertama utuh; retry tanpa duplikasi audit; penolakan placeholder/UUID tak dikenal/UUID owner pertama/employee; dukungan pending tanpa role dan penolakan revoked; batas tepat satu owner awal tanpa owner ketiga/recovery otomatis; audit failure rollback. Tidak mengubah API owner invite atau bootstrap pertama. Tidak menambah owner pada proyek pengguna karena UUID perangkat kedua belum diberikan/diverifikasi. Tidak mengulang UAT fitur lain.

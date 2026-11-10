@@ -99,3 +99,5 @@ Ikuti [setup Phase 7](docs/PHASE-7-SETUP.md) untuk satu migration baru `20261109
 Pembaruan tampilan: navigasi bawah mobile, sidebar desktop, Lainnya dan nama sapaan tersimpan di database. Panduan aktivasi SQL tambahan dan penggunaan ada di [MOBILE-APP-SETUP.md](docs/MOBILE-APP-SETUP.md). Tidak memerlukan pairing ulang atau variabel baru.
 
 Sesi latihan tim: [panduan mulai dari kosong dan batas reset admin](docs/TRAINING-SESSION.md). Reset khusus TEST hanya dijalankan atas permintaan eksplisit pemilik; template tidak pernah dipanggil build/frontend.
+
+Owner kedua: [panduan langkah demi langkah](docs/SECOND-OWNER.md). Penambahan manual lewat admin Supabase setelah mencocokkan UUID perangkat baru; owner pertama tetap aktif.
